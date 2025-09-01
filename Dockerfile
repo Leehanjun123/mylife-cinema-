@@ -1,14 +1,15 @@
-# Node.js 20 LTS 이미지 사용
-FROM node:20-alpine
+# Node.js 20 이미지 사용 (alpine 대신 일반 버전)
+FROM node:20
 
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# package.json 복사 (package-lock.json 제외)
+# package.json 복사
 COPY package.json ./
 
-# 의존성 설치 (npm install 사용)
-RUN npm install --production
+# npm 캐시 정리 및 의존성 설치
+RUN npm cache clean --force && \
+    npm install --production --legacy-peer-deps
 
 # 앱 소스 복사
 COPY . .
