@@ -22,7 +22,7 @@
     "winston": "^3.11.0"
   },
   "engines": {
-    "node": "18.x"
+    "node": ">=18.0.0"
   },
   "keywords": ["ai", "video", "diary", "cinema"],
   "author": "MyLife Cinema Team",
