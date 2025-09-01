@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.env
+.env.local
+.git
+.gitignore
+README.md
+.next
+.vercel
+test-*.js
+test-*.html
+frontend/
+.DS_Store
+*.log
+google-cloud-key.json
