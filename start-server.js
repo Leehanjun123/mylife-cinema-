@@ -20,6 +20,11 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3002', 
     'https://mylife-cinema.vercel.app',
+    'https://frontend-aj74j3k8v-paparapapicos-projects.vercel.app',
+    'https://frontend-oq6e03byg-paparapapicos-projects.vercel.app',
+    'https://life-movie-ai.vercel.app',
+    'https://daily-cinema.vercel.app',
+    'https://my-daily-cinema.vercel.app',
     process.env.FRONTEND_URL || 'http://localhost:3000'
   ],
   credentials: true
