@@ -1,0 +1,9 @@
+[phases.setup]
+nixPkgs = ["nodejs", "ffmpeg"]
+aptPkgs = ["ffmpeg", "imagemagick"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[start]
+cmd = "npm start"

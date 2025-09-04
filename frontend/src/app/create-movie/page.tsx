@@ -150,7 +150,20 @@ export default function CreateMoviePage() {
       setIsGenerating(true)
       setStep(4) // Go to processing step
       setGenerationProgress(0)
-      setGenerationStatus('당신의 이야기를 분석하고 있어요...')
+      setGenerationStatus('🚀 초고속 영화 제작 시작! (목표: 30초 이내)')
+      
+      const startTime = Date.now()
+      let elapsedTimer: any = null
+      
+      // 실시간 경과 시간 표시
+      elapsedTimer = setInterval(() => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
+        if (isGenerating) {
+          const currentStatus = document.querySelector('.generation-status')?.textContent || ''
+          const baseStatus = currentStatus.split('(')[0].trim()
+          setGenerationStatus(`${baseStatus} (${elapsed}초 경과)`)
+        }
+      }, 100)
       setError(null)
 
       // Create movie in database first

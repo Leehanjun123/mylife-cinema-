@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import MovieGenerator from './services/movieGenerator.js';
+import FastVideoGenerator from './services/fastVideoGenerator.js';
 
 dotenv.config();
 
@@ -110,11 +111,11 @@ app.post('/api/movies/create', async (req, res) => {
   const { diary, emotion, style, music, length, userId, movieId } = req.body;
   
   try {
-    // Initialize movie generator
-    const generator = new MovieGenerator();
+    // Use Fast Video Generator for real video
+    const generator = new FastVideoGenerator();
     
-    // Generate the movie
-    const result = await generator.generateMovie(
+    // Generate the movie with real video
+    const result = await generator.generateMovieFast(
       diary || 'Today was a wonderful day.',
       emotion || 'happy',
       style || 'realistic',
@@ -126,6 +127,7 @@ app.post('/api/movies/create', async (req, res) => {
         if (socketId && io.sockets.sockets.get(socketId)) {
           io.sockets.sockets.get(socketId).emit('generation:progress', progress);
         }
+        console.log('Progress:', progress);
       }
     );
     
