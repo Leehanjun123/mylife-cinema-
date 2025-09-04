@@ -160,8 +160,7 @@ export default function CreateMoviePage() {
         style: selectedStyle,
         music: selectedMusic,
         length: movieLength,
-        status: 'processing' as const,
-        is_public: false // Default to private, user can make public later
+        status: 'processing' as const
       }
 
       const { data: movie, error: dbError } = await db.createMovie(movieData)
@@ -188,8 +187,8 @@ export default function CreateMoviePage() {
       // Call backend API to start generation
       let data
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
-        const response = await fetch(apiUrl + '/movies/create', {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mylife-cinema-backend-production.up.railway.app'
+        const response = await fetch(`${apiUrl}/api/movies/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

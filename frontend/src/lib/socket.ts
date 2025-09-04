@@ -7,14 +7,21 @@ class SocketManager {
   private socket: any = null
   private isConnected = false
 
-  connect(serverUrl: string = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3000') {
+  connect(serverUrl: string = process.env.NEXT_PUBLIC_API_URL || 'https://mylife-cinema-backend-production.up.railway.app') {
     if (this.socket) {
       return this.socket
     }
 
-    this.socket = io(serverUrl, {
-      transports: ['websocket', 'polling'],
+    // Remove /api from URL if present
+    const socketUrl = serverUrl.replace('/api', '')
+
+    this.socket = io(socketUrl, {
+      transports: ['polling', 'websocket'], // Start with polling first
       autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     })
 
     // 연결 성공
