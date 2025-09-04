@@ -163,12 +163,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = async () => {
     try {
       if (user) {
-        await loadUserProfile(user.id)
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Profile refresh timeout')), 5000)
+        )
+        
+        await Promise.race([
+          loadUserProfile(user.id),
+          timeoutPromise
+        ])
         return true
       }
       return false
     } catch (error) {
       console.error('Error refreshing profile:', error)
+      // Don't throw error to prevent breaking payment success page
       return false
     }
   }

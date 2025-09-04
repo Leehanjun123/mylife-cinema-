@@ -1,39 +1,78 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { CheckCircle, ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 
-function PaymentSuccessContent() {
+export default function PaymentSuccessPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { user, refreshProfile } = useAuth()
   const [loading, setLoading] = useState(true)
+  const [loadingText, setLoadingText] = useState('결제 확인 중...')
 
   useEffect(() => {
-    // 무조건 2초 후에 로딩 종료
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 2000)
+    console.log('Payment success page mounted')
     
-    // Profile refresh는 별도로 시도
+    // Multiple failsafe timers
+    const timer1 = setTimeout(() => {
+      console.log('Timer 1: Stopping loading after 1 second')
+      setLoading(false)
+    }, 1000)
+    
+    const timer2 = setTimeout(() => {
+      setLoadingText('잠시만 기다려주세요...')
+    }, 500)
+    
+    // Emergency override - 무조건 3초 후 종료
+    const emergencyTimer = setTimeout(() => {
+      console.log('Emergency timer: Force stopping loading')
+      setLoading(false)
+    }, 3000)
+    
+    // Get session ID without useSearchParams (Suspense 회피)
+    const sessionId = typeof window !== 'undefined' 
+      ? new URLSearchParams(window.location.search).get('session_id')
+      : null
+    
+    console.log('Session ID:', sessionId)
+    
+    // Profile refresh with timeout
     if (refreshProfile) {
-      refreshProfile().catch(err => {
-        console.error('Profile refresh failed:', err)
-      })
+      const refreshTimeout = setTimeout(() => {
+        console.log('Profile refresh timeout - continuing anyway')
+      }, 2000)
+      
+      refreshProfile()
+        .catch(err => console.error('Profile refresh error:', err))
+        .finally(() => clearTimeout(refreshTimeout))
     }
     
-    return () => clearTimeout(timer)
+    // Fallback on window focus
+    const handleFocus = () => {
+      console.log('Window focused - stopping loading')
+      setLoading(false)
+    }
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      clearTimeout(timer1)
+      clearTimeout(timer2)
+      clearTimeout(emergencyTimer)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-white border-t-transparent rounded-full"></div>
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-white text-lg">{loadingText}</p>
+        </div>
       </div>
     )
   }
@@ -94,17 +133,5 @@ function PaymentSuccessContent() {
         </div>
       </Card>
     </div>
-  )
-}
-
-export default function PaymentSuccessPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-white border-t-transparent rounded-full"></div>
-      </div>
-    }>
-      <PaymentSuccessContent />
-    </Suspense>
   )
 }

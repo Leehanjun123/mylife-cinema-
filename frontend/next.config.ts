@@ -31,6 +31,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['@/components', '@/lib'],
     webVitalsAttribution: ['CLS', 'LCP'],
+    // Disable problematic features that can cause hydration issues
+    serverComponentsExternalPackages: ['@stripe/stripe-js'],
   },
 
   // 헤더 설정
@@ -54,6 +56,24 @@ const nextConfig: NextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+      // Specific headers for payment pages to prevent caching issues
+      {
+        source: '/payment/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
           },
         ],
       },
