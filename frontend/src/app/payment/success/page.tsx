@@ -1,82 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { CheckCircle, ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
 
+// 극도로 단순화된 버전 - 무조건 성공 페이지만 표시
 export default function PaymentSuccessPage() {
-  const router = useRouter()
-  const { user, refreshProfile } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [loadingText, setLoadingText] = useState('결제 확인 중...')
-
-  useEffect(() => {
-    console.log('Payment success page mounted')
-    
-    // Multiple failsafe timers
-    const timer1 = setTimeout(() => {
-      console.log('Timer 1: Stopping loading after 1 second')
-      setLoading(false)
-    }, 1000)
-    
-    const timer2 = setTimeout(() => {
-      setLoadingText('잠시만 기다려주세요...')
-    }, 500)
-    
-    // Emergency override - 무조건 3초 후 종료
-    const emergencyTimer = setTimeout(() => {
-      console.log('Emergency timer: Force stopping loading')
-      setLoading(false)
-    }, 3000)
-    
-    // Get session ID without useSearchParams (Suspense 회피)
-    const sessionId = typeof window !== 'undefined' 
-      ? new URLSearchParams(window.location.search).get('session_id')
-      : null
-    
-    console.log('Session ID:', sessionId)
-    
-    // Profile refresh with timeout
-    if (refreshProfile) {
-      const refreshTimeout = setTimeout(() => {
-        console.log('Profile refresh timeout - continuing anyway')
-      }, 2000)
-      
-      refreshProfile()
-        .catch(err => console.error('Profile refresh error:', err))
-        .finally(() => clearTimeout(refreshTimeout))
-    }
-    
-    // Fallback on window focus
-    const handleFocus = () => {
-      console.log('Window focused - stopping loading')
-      setLoading(false)
-    }
-    window.addEventListener('focus', handleFocus)
-    
-    return () => {
-      clearTimeout(timer1)
-      clearTimeout(timer2)
-      clearTimeout(emergencyTimer)
-      window.removeEventListener('focus', handleFocus)
-    }
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-white text-lg">{loadingText}</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
       <Card className="max-w-md w-full p-8 bg-white/10 backdrop-blur border-white/20">
