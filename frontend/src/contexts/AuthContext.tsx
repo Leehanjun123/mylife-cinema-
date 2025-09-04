@@ -47,15 +47,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth state
   useEffect(() => {
-    // Get initial session
-    auth.getCurrentUser().then(({ user }) => {
-      setUser(user)
-      if (user) {
-        loadUserProfile(user.id)
-        loadUserStats(user.id)
+    const initializeAuth = async () => {
+      try {
+        // Add timeout to prevent infinite hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth initialization timeout')), 5000)
+        )
+        
+        const { user } = await Promise.race([
+          auth.getCurrentUser(),
+          timeoutPromise
+        ])
+        
+        setUser(user)
+        if (user) {
+          // Load profile and stats with timeout protection
+          try {
+            await Promise.race([
+              Promise.all([
+                loadUserProfile(user.id),
+                loadUserStats(user.id)
+              ]),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Profile loading timeout')), 3000)
+              )
+            ])
+          } catch (profileError) {
+            console.warn('Profile loading failed, continuing anyway:', profileError)
+            // Don't throw - allow the user to proceed even if profile loading fails
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization failed:', error)
+        // Even if auth fails, we should stop loading
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
+
+    initializeAuth()
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -64,8 +94,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(user)
         
         if (user) {
-          await loadUserProfile(user.id)
-          await loadUserStats(user.id)
+          try {
+            // Add timeout protection for auth state changes too
+            await Promise.race([
+              Promise.all([
+                loadUserProfile(user.id),
+                loadUserStats(user.id)
+              ]),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Auth state change profile loading timeout')), 3000)
+              )
+            ])
+          } catch (error) {
+            console.warn('Auth state change profile loading failed:', error)
+            // Continue anyway - don't block user
+          }
         } else {
           setProfile(null)
           setStats(null)

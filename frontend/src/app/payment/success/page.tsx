@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { CheckCircle, ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
-
-// 극도로 단순화된 버전 - 무조건 성공 페이지만 표시
+// Payment success page - completely independent of auth state
 export default function PaymentSuccessPage() {
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
       <Card className="max-w-md w-full p-8 bg-white/10 backdrop-blur border-white/20">
