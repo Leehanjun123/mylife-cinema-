@@ -128,12 +128,47 @@ export const db = {
   },
 
   createMovie: async (movieData: any) => {
-    const { data, error } = await supabase
-      .from('movies')
-      .insert([movieData])
-      .select()
-      .single()
-    return { data, error }
+    console.log('🎬 영화 저장 시도:', movieData)
+    
+    // 필수 필드 확인
+    if (!movieData.user_id || !movieData.title || !movieData.content) {
+      console.error('❌ 필수 필드 누락')
+      return { data: null, error: new Error('필수 필드가 누락되었습니다') }
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('movies')
+        .insert([{
+          user_id: movieData.user_id,
+          title: movieData.title || '제목 없음',
+          content: movieData.content || '',
+          emotion: movieData.emotion || 'joy',
+          genre: movieData.genre || 'drama',
+          style: movieData.style || 'realistic',
+          music: movieData.music || 'emotional',
+          length: movieData.length || 60,
+          status: movieData.status || 'processing',
+          video_url: movieData.video_url || null,
+          thumbnail_url: movieData.thumbnail_url || null,
+          scenes: movieData.scenes || null,
+          is_public: movieData.is_public || false,
+          likes: 0
+        }])
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('❌ Supabase 에러:', error)
+        throw error
+      }
+      
+      console.log('✅ 영화 저장 성공:', data)
+      return { data, error }
+    } catch (err) {
+      console.error('❌ 영화 저장 실패:', err)
+      return { data: null, error: err }
+    }
   },
 
   updateMovie: async (movieId: string, updates: any) => {
