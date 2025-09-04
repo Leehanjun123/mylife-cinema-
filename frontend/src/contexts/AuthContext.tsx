@@ -175,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const canCreateMovie = () => {
     if (!profile || !stats) return false
     
-    if (profile.subscription_tier !== 'free') return true
+    if (profile?.subscription_tier !== 'free') return true
     
     return stats.free_movies_used < 3
   }
@@ -183,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getRemainingFreeMovies = () => {
     if (!profile || !stats) return 0
     
-    if (profile.subscription_tier !== 'free') return Infinity
+    if (profile?.subscription_tier !== 'free') return Infinity
     
     return Math.max(0, 3 - stats.free_movies_used)
   }

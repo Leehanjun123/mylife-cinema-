@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
       'sample-videos.com',
       'storage.lifecinema.site',
       'supabase.co',
-      'haxxfzxgxdgfljgyhbzc.supabase.co'
+      'hsvdyccqsrkdswkkvftf.supabase.co'
     ],
   },
 
