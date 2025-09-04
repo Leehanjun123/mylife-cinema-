@@ -88,7 +88,6 @@ export default function CreateMoviePage() {
   const [wordCount, setWordCount] = useState(0)
   const [todayPrompt] = useState(dailyPrompts[Math.floor(Math.random() * dailyPrompts.length)])
   const [currentMovieId, setCurrentMovieId] = useState<string | null>(null)
-  const [currentMovie, setCurrentMovie] = useState<any>(null)
   
   const router = useRouter()
   const { user, profile, stats, loading, canCreateMovie, getRemainingFreeMovies, refreshStats } = useAuth()
@@ -102,7 +101,8 @@ export default function CreateMoviePage() {
     setGenerationStatus,
     setError,
     addMovie,
-    currentMovie
+    currentMovie,
+    setCurrentMovie
   } = useAppStore()
 
   // Initialize socket connection
@@ -172,7 +172,12 @@ export default function CreateMoviePage() {
       }
 
       setCurrentMovieId(movie.id)
-      setCurrentMovie(movie)
+      setCurrentMovie({
+        ...movie,
+        videoUrl: null,
+        thumbnailUrl: null,
+        scenes: []
+      })
       
       // Add to local store
       addMovie({
@@ -253,7 +258,7 @@ export default function CreateMoviePage() {
       })
 
       // Update local store with completed movie using real data
-      const completedMovie = {
+      const completedMovie: any = {
         id: movie.id,
         title: movie.title,
         content: movie.content,
