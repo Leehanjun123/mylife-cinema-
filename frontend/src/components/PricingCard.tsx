@@ -106,7 +106,7 @@ export function PricingCard() {
           priceId: plan.priceId,
           userId: user.id,
           userEmail: user.email,
-          successUrl: `${window.location.origin}/payment/success`,
+          successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/payment/cancel`
         })
       })
