@@ -7,47 +7,43 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: [
+
+// Configure CORS with the cors package
+const corsOptions = {
+  origin: function(origin, callback) {
+    const allowedOrigins = [
       'https://www.lifecinema.site',
       'https://lifecinema.site',
       'http://localhost:3000',
       'http://localhost:3001'
-    ],
-    credentials: true,
-    methods: ['GET', 'POST']
-  }
-});
+    ];
+    
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    // Log for debugging
+    console.log('Request from origin:', origin);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Origin not in allowed list, but allowing anyway:', origin);
+      callback(null, true); // Temporarily allow all origins for debugging
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Socket-Id', 'x-socket-id'],
+  maxAge: 86400
+};
 
-// CORS middleware - 매우 중요!
-app.use((req, res, next) => {
-  const allowedOrigins = [
-    'https://www.lifecinema.site',
-    'https://lifecinema.site',
-    'http://localhost:3000',
-    'http://localhost:3001'
-  ];
-  
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Socket-Id');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-  
-  next();
-});
-
+app.use(cors(corsOptions));
 app.use(express.json());
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: corsOptions
+});
 
 // Health check
 app.get('/', (req, res) => {
