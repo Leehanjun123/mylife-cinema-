@@ -125,7 +125,7 @@ export function Navbar() {
                     {/* Subscription Badge */}
                     {profile?.subscription_tier !== 'free' && (
                       <span className="hidden md:block px-2 py-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full">
-                        {profile.subscription_tier === 'creator' ? '크리에이터' : '프로'}
+                        {profile?.subscription_tier === 'creator' ? '크리에이터' : '프로'}
                       </span>
                     )}
                   </button>

@@ -31,7 +31,7 @@ export function AdSense({ adSlot, adFormat = 'auto', style, className }: AdSense
     <ins
       className={`adsbygoogle ${className || ''}`}
       style={{ display: 'block', ...style }}
-      data-ad-client={process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID || "ca-pub-1234567890123456"}
+      data-ad-client={process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID || "ca-pub-1752582087901677"}
       data-ad-slot={adSlot}
       data-ad-format={adFormat}
       data-full-width-responsive="true"
@@ -45,7 +45,7 @@ export function AdSenseScript() {
     if (typeof window !== 'undefined' && !document.querySelector('[data-ad-client]')) {
       const script = document.createElement('script')
       script.async = true
-      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID || 'ca-pub-1234567890123456'}`
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID || 'ca-pub-1752582087901677'}`
       script.crossOrigin = 'anonymous'
       document.head.appendChild(script)
 
