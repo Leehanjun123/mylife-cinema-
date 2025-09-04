@@ -1,0 +1,231 @@
+-- Fixed Database Update - Type casting corrected
+-- This script safely adds only what's missing with proper type casting
+
+-- Add missing columns to existing users table (if it exists)
+DO $$ 
+BEGIN 
+    -- Only add columns that don't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='users' AND column_name='subscription_tier') THEN
+        ALTER TABLE public.users ADD COLUMN subscription_tier VARCHAR(20) DEFAULT 'free';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='users' AND column_name='username') THEN
+        ALTER TABLE public.users ADD COLUMN username VARCHAR(50);
+    END IF;
+EXCEPTION
+    WHEN undefined_table THEN
+        -- Create users table if it doesn't exist
+        CREATE TABLE public.users (
+            id UUID REFERENCES auth.users(id) PRIMARY KEY,
+            username VARCHAR(50),
+            email VARCHAR(255),
+            avatar_url TEXT,
+            subscription_tier VARCHAR(20) DEFAULT 'free',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+END $$;
+
+-- Create user_stats table (safe)
+CREATE TABLE IF NOT EXISTS public.user_stats (
+    user_id UUID PRIMARY KEY,
+    movies_created INTEGER DEFAULT 0,
+    movies_this_month INTEGER DEFAULT 0,
+    streak_days INTEGER DEFAULT 0,
+    total_likes INTEGER DEFAULT 0,
+    free_movies_used INTEGER DEFAULT 0,
+    last_movie_date DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add foreign key constraint for user_stats if not exists
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                   WHERE constraint_name = 'user_stats_user_id_fkey') THEN
+        ALTER TABLE public.user_stats ADD CONSTRAINT user_stats_user_id_fkey 
+            FOREIGN KEY (user_id) REFERENCES auth.users(id);
+    END IF;
+EXCEPTION
+    WHEN others THEN NULL;
+END $$;
+
+-- Update existing movies table - add missing columns only
+DO $$ 
+BEGIN 
+    -- Add user_id if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='user_id') THEN
+        ALTER TABLE public.movies ADD COLUMN user_id UUID;
+        -- Add foreign key constraint
+        ALTER TABLE public.movies ADD CONSTRAINT movies_user_id_fkey 
+            FOREIGN KEY (user_id) REFERENCES auth.users(id);
+    END IF;
+    
+    -- Add other missing columns
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='emotion') THEN
+        ALTER TABLE public.movies ADD COLUMN emotion VARCHAR(50);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='style') THEN
+        ALTER TABLE public.movies ADD COLUMN style VARCHAR(50) DEFAULT 'realistic';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='music') THEN
+        ALTER TABLE public.movies ADD COLUMN music VARCHAR(50) DEFAULT 'emotional';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='length') THEN
+        ALTER TABLE public.movies ADD COLUMN length VARCHAR(20) DEFAULT 'short';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='is_public') THEN
+        ALTER TABLE public.movies ADD COLUMN is_public BOOLEAN DEFAULT false;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='likes') THEN
+        ALTER TABLE public.movies ADD COLUMN likes INTEGER DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='views') THEN
+        ALTER TABLE public.movies ADD COLUMN views INTEGER DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='scenes') THEN
+        ALTER TABLE public.movies ADD COLUMN scenes JSONB;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='video_url') THEN
+        ALTER TABLE public.movies ADD COLUMN video_url TEXT;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' AND table_name='movies' AND column_name='thumbnail_url') THEN
+        ALTER TABLE public.movies ADD COLUMN thumbnail_url TEXT;
+    END IF;
+END $$;
+
+-- Create supporting tables (safe with IF NOT EXISTS)
+CREATE TABLE IF NOT EXISTS public.movie_likes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    movie_id UUID,
+    user_id UUID,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(movie_id, user_id)
+);
+
+-- Add foreign key constraints for movie_likes
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                   WHERE constraint_name = 'movie_likes_movie_id_fkey') THEN
+        ALTER TABLE public.movie_likes ADD CONSTRAINT movie_likes_movie_id_fkey 
+            FOREIGN KEY (movie_id) REFERENCES public.movies(id) ON DELETE CASCADE;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                   WHERE constraint_name = 'movie_likes_user_id_fkey') THEN
+        ALTER TABLE public.movie_likes ADD CONSTRAINT movie_likes_user_id_fkey 
+            FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+EXCEPTION
+    WHEN others THEN NULL;
+END $$;
+
+-- Enable Row Level Security
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.movies ENABLE ROW LEVEL SECURITY;
+
+-- Create basic RLS policies with proper type casting
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
+CREATE POLICY "Users can view own profile" ON public.users
+    FOR ALL USING (auth.uid()::uuid = id);
+
+DROP POLICY IF EXISTS "Users can manage own stats" ON public.user_stats;
+CREATE POLICY "Users can manage own stats" ON public.user_stats
+    FOR ALL USING (auth.uid()::uuid = user_id);
+
+DROP POLICY IF EXISTS "Users can manage own movies" ON public.movies;
+CREATE POLICY "Users can manage own movies" ON public.movies
+    FOR ALL USING (auth.uid()::uuid = user_id);
+
+-- Create function to handle new users
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Insert into users table
+    INSERT INTO public.users (id, email, username)
+    VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1))
+    )
+    ON CONFLICT (id) DO UPDATE SET 
+        email = NEW.email;
+    
+    -- Insert into user_stats
+    INSERT INTO public.user_stats (user_id)
+    VALUES (NEW.id)
+    ON CONFLICT (user_id) DO NOTHING;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger for new users (drop first to avoid conflicts)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Create function to update user stats when movie is created
+CREATE OR REPLACE FUNCTION public.update_user_stats_on_movie_create()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.user_stats (user_id, movies_created, movies_this_month, last_movie_date)
+    VALUES (NEW.user_id, 1, 1, CURRENT_DATE)
+    ON CONFLICT (user_id) DO UPDATE SET
+        movies_created = user_stats.movies_created + 1,
+        movies_this_month = CASE 
+            WHEN DATE_TRUNC('month', user_stats.last_movie_date) = DATE_TRUNC('month', CURRENT_DATE)
+            THEN user_stats.movies_this_month + 1
+            ELSE 1
+        END,
+        last_movie_date = CURRENT_DATE,
+        updated_at = NOW();
+    
+    -- Update free movies usage for free tier users
+    IF (SELECT subscription_tier FROM public.users WHERE id = NEW.user_id) = 'free' THEN
+        UPDATE public.user_stats
+        SET free_movies_used = free_movies_used + 1
+        WHERE user_id = NEW.user_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger for movie creation
+DROP TRIGGER IF EXISTS update_user_stats_trigger ON public.movies;
+CREATE TRIGGER update_user_stats_trigger
+    AFTER INSERT ON public.movies
+    FOR EACH ROW EXECUTE FUNCTION update_user_stats_on_movie_create();
+
+-- Grant permissions
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
+
+SELECT 'Database update completed successfully!' as result;
