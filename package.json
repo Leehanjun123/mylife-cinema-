@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install": "cd frontend && npm install --production=false",
+    "install": "cd frontend && npm install",
     "build": "cd frontend && npm run build",
-    "start": "cd frontend && npm start",
+    "start": "cd frontend && npx next start",
     "dev": "cd frontend && npm run dev"
   },
   "engines": {
