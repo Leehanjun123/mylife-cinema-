@@ -9,32 +9,60 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // Auth helper functions
 export const auth = {
   signUp: async (email: string, password: string, userData?: any) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData
-      }
-    })
-    return { data, error }
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData
+        }
+      })
+      return { data, error }
+    } catch (err) {
+      console.error('SignUp error:', err)
+      return { data: null, error: err }
+    }
   },
 
   signIn: async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-    return { data, error }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+      return { data, error }
+    } catch (err) {
+      console.error('SignIn error:', err)
+      return { data: null, error: err }
+    }
   },
 
   signOut: async () => {
-    const { error } = await supabase.auth.signOut()
-    return { error }
+    try {
+      const { error } = await supabase.auth.signOut()
+      return { error }
+    } catch (err) {
+      console.error('SignOut error:', err)
+      return { error: err }
+    }
   },
 
   getCurrentUser: async () => {
-    const { data: { user }, error } = await supabase.auth.getUser()
-    return { user, error }
+    try {
+      console.log('🔍 Getting current user from Supabase...')
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error) {
+        console.warn('⚠️ Supabase getUser error:', error)
+      } else if (user) {
+        console.log('✅ User found:', user.email)
+      } else {
+        console.log('ℹ️ No user logged in')
+      }
+      return { user, error }
+    } catch (err) {
+      console.error('❌ getCurrentUser error:', err)
+      return { user: null, error: err }
+    }
   },
 
 }

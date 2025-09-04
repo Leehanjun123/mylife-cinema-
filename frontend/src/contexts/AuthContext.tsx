@@ -48,16 +48,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize auth state
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log('🔐 Auth 초기화 시작...')
       try {
-        // Add timeout to prevent infinite hanging
+        // Add timeout to prevent infinite hanging - increased to 10 seconds
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth initialization timeout')), 5000)
+          setTimeout(() => reject(new Error('Auth initialization timeout')), 10000)
         )
         
-        const { user } = await Promise.race([
+        const { user, error } = await Promise.race([
           auth.getCurrentUser(),
           timeoutPromise
-        ])
+        ]) as any
+        
+        if (error) {
+          console.warn('⚠️ Auth 사용자 가져오기 실패:', error)
+        }
         
         setUser(user)
         if (user) {
@@ -69,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 loadUserStats(user.id)
               ]),
               new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Profile loading timeout')), 3000)
+                setTimeout(() => reject(new Error('Profile loading timeout')), 8000)
               )
             ])
           } catch (profileError) {
@@ -78,9 +83,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (error) {
-        console.error('Auth initialization failed:', error)
-        // Even if auth fails, we should stop loading
+        console.error('❌ Auth initialization failed:', error)
+        // Auth 실패해도 앱은 계속 작동해야 함
+        setUser(null)
+        setProfile(null)
+        setStats(null)
       } finally {
+        console.log('✅ Auth 초기화 완료')
         setLoading(false)
       }
     }
@@ -102,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 loadUserStats(user.id)
               ]),
               new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Auth state change profile loading timeout')), 3000)
+                setTimeout(() => reject(new Error('Auth state change profile loading timeout')), 8000)
               )
             ])
           } catch (error) {
