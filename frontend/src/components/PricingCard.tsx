@@ -7,7 +7,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Check, Zap, Crown, Sparkles } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+// Stripe 초기화 - Railway에서 환경변수 설정 필요  
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
 
 interface PricingPlan {
   id: string
@@ -104,12 +105,21 @@ export function PricingCard() {
           priceId: plan.priceId,
           userId: user.id,
           userEmail: user.email,
-          successUrl: `${window.location.origin}/dashboard?upgrade=success`,
-          cancelUrl: `${window.location.origin}/pricing?upgrade=cancelled`
+          successUrl: `${window.location.origin}/payment/success`,
+          cancelUrl: `${window.location.origin}/payment/cancel`
         })
       })
 
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || '결제 세션 생성에 실패했습니다.')
+      }
+
       const { sessionId } = await response.json()
+
+      if (!sessionId) {
+        throw new Error('세션 ID를 받지 못했습니다.')
+      }
 
       const { error } = await stripe.redirectToCheckout({
         sessionId

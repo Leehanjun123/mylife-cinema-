@@ -1,0 +1,11 @@
+# Railway Frontend 환경 변수 설정
+# Railway 대시보드 > Frontend 프로젝트 > Variables 탭에 추가
+
+NEXT_PUBLIC_SUPABASE_URL=https://hsvdyccqsrkdswkkvftf.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=[Supabase Anon Key - .env.local 파일에서 복사]
+NEXT_PUBLIC_API_URL=https://mylife-cinema-backend-production.up.railway.app/api
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=[Stripe Publishable Key - .env.local 파일에서 복사]
+STRIPE_SECRET_KEY=[Stripe Secret Key - .env.local 파일에서 복사]
+
+# 중요: 실제 키 값은 .env.local 파일에 있습니다.
+# GitHub에는 실제 키를 푸시하지 마세요!

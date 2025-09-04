@@ -7,31 +7,49 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOi
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
+// Stripe 초기화 - Railway에서 환경변수 설정 필요
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is not configured in environment variables')
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-06-20'
 })
 
 export async function POST(request: NextRequest) {
+  console.log('Stripe checkout session creation started')
+  console.log('Environment check:', {
+    hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
+    envKeys: Object.keys(process.env).filter(k => k.includes('STRIPE'))
+  })
+  
   try {
     const { priceId, userId, userEmail, successUrl, cancelUrl } = await request.json()
 
-    // Validate user exists in Supabase
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: '사용자를 찾을 수 없습니다.' }, { status: 404 })
+    // For testing without real user validation
+    if (!userId || !userEmail) {
+      return NextResponse.json({ error: '사용자 정보가 필요합니다.' }, { status: 400 })
     }
 
-    // Create checkout session
+    // Create checkout session with inline price
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
       line_items: [
         {
-          price: priceId,
+          price_data: {
+            currency: 'krw',
+            product_data: {
+              name: priceId === 'price_creator_monthly' ? '크리에이터 플랜' : '프로 플랜',
+              description: priceId === 'price_creator_monthly' 
+                ? '월 10편 영화 제작, 1080p HD, 프리미엄 스타일' 
+                : '무제한 영화 제작, 4K Ultra HD, 모든 기능',
+              images: ['https://lifecinema.site/logo.png'],
+            },
+            unit_amount: priceId === 'price_creator_monthly' ? 9900 : 19900,
+            recurring: {
+              interval: 'month',
+            },
+          },
           quantity: 1,
         },
       ],
@@ -40,22 +58,36 @@ export async function POST(request: NextRequest) {
       cancel_url: cancelUrl,
       metadata: {
         userId: userId,
+        priceId: priceId,
       },
       subscription_data: {
         metadata: {
           userId: userId,
+          priceId: priceId,
         },
         trial_period_days: 7, // 7일 무료 체험
       },
       allow_promotion_codes: true,
       billing_address_collection: 'required',
+      phone_number_collection: {
+        enabled: false,
+      },
     })
 
     return NextResponse.json({ sessionId: session.id })
   } catch (error: any) {
-    console.error('Checkout session 생성 오류:', error)
+    console.error('Checkout session 생성 오류 상세:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      statusCode: error.statusCode,
+      raw: error.raw
+    })
     return NextResponse.json(
-      { error: '결제 세션 생성에 실패했습니다.' },
+      { 
+        error: error.message || '결제 세션 생성에 실패했습니다.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     )
   }
