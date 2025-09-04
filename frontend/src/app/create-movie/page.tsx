@@ -88,6 +88,7 @@ export default function CreateMoviePage() {
   const [wordCount, setWordCount] = useState(0)
   const [todayPrompt] = useState(dailyPrompts[Math.floor(Math.random() * dailyPrompts.length)])
   const [currentMovieId, setCurrentMovieId] = useState<string | null>(null)
+  const [currentMovie, setCurrentMovie] = useState<any>(null)
   
   const router = useRouter()
   const { user, profile, stats, loading, canCreateMovie, getRemainingFreeMovies, refreshStats } = useAuth()
@@ -171,6 +172,7 @@ export default function CreateMoviePage() {
       }
 
       setCurrentMovieId(movie.id)
+      setCurrentMovie(movie)
       
       // Add to local store
       addMovie({
@@ -251,24 +253,28 @@ export default function CreateMoviePage() {
       })
 
       // Update local store with completed movie using real data
-      addMovie({
+      const completedMovie = {
         id: movie.id,
         title: movie.title,
         content: movie.content,
         emotion: movie.emotion,
-        genre: data.genre,
+        genre: data.genre || movie.emotion,
         style: movie.style,
         music: movie.music,
         status: 'completed',
-        videoUrl: data.videoUrl,
-        thumbnailUrl: data.thumbnailUrl,
-        scenes: data.scenes,
+        videoUrl: data.videoUrl || 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        thumbnailUrl: data.thumbnailUrl || '/movie-placeholder.jpg',
+        scenes: data.scenes || [],
         createdAt: movie.created_at
-      })
+      }
+      
+      addMovie(completedMovie)
+      setCurrentMovie(completedMovie)
 
       // Refresh user stats
       await refreshStats()
       
+      setIsGenerating(false) // Stop generating animation
       setStep(5) // Go to completion step
       
     } catch (error) {
@@ -764,10 +770,12 @@ export default function CreateMoviePage() {
 
                   {/* Action Buttons */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                      <Download className="mr-2 h-4 w-4" />
-                      다운로드
-                    </Button>
+                    <Link href="/dashboard">
+                      <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full">
+                        <Film className="mr-2 h-4 w-4" />
+                        내 영화 보기
+                      </Button>
+                    </Link>
                     
                     <Button 
                       variant="outline"
