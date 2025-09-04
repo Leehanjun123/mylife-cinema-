@@ -147,7 +147,7 @@ export const db = {
           genre: movieData.genre || 'drama',
           style: movieData.style || 'realistic',
           music: movieData.music || 'emotional',
-          length: movieData.length || 60,
+          length: movieData.length === 'short' ? 30 : movieData.length === 'full' ? 180 : 60,
           status: movieData.status || 'processing',
           video_url: movieData.video_url || null,
           thumbnail_url: movieData.thumbnail_url || null,

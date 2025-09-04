@@ -160,7 +160,7 @@ export default function CreateMoviePage() {
         emotion: selectedEmotion,
         style: selectedStyle,
         music: selectedMusic,
-        length: movieLength,
+        length: movieLength === 'short' ? 30 : movieLength === 'full' ? 180 : 60,
         status: 'processing' as const
       }
 
