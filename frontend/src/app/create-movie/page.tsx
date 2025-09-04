@@ -104,13 +104,14 @@ export default function CreateMoviePage() {
     currentMovie
   } = useAppStore()
 
-  // Initialize socket connection
+  // Initialize socket connection (optional - backend may not have Socket.IO)
   useEffect(() => {
-    if (user) {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000'
-      socketManager.connect(apiUrl)
-      socketManager.manualConnect()
-    }
+    // Temporarily disable Socket.IO until backend is ready
+    // if (user) {
+    //   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000'
+    //   socketManager.connect(apiUrl)
+    //   socketManager.manualConnect()
+    // }
   }, [user])
 
   // Update word count
@@ -188,7 +189,7 @@ export default function CreateMoviePage() {
       // Call backend API to start generation
       let data
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mylife-cinema-backend-production.up.railway.app'
+        const apiUrl = 'https://mylife-cinema-backend-production.up.railway.app'
         const response = await fetch(`${apiUrl}/api/movies/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
