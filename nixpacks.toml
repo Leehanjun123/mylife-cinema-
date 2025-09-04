@@ -2,7 +2,7 @@
 nixPkgs = ["nodejs-18_x", "npm-9_x"]
 
 [phases.install]
-cmds = ["cd frontend && npm ci --legacy-peer-deps"]
+cmds = ["cd frontend && npm install --production=false"]
 
 [phases.build]
 cmds = ["cd frontend && npm run build"]
