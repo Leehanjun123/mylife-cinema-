@@ -15,16 +15,31 @@ function PaymentSuccessContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const sessionId = searchParams.get('session_id')
-    if (sessionId) {
-      // Refresh user profile to get updated subscription
-      refreshProfile()
-      setLoading(false)
-    } else {
-      // No session ID, redirect to home
-      router.push('/')
+    const handlePaymentSuccess = async () => {
+      const sessionId = searchParams.get('session_id')
+      
+      if (sessionId) {
+        // Refresh user profile to get updated subscription
+        try {
+          if (refreshProfile) {
+            await refreshProfile()
+          }
+        } catch (error) {
+          console.error('Profile refresh error:', error)
+        }
+        
+        // Set a timeout to ensure loading stops
+        setTimeout(() => {
+          setLoading(false)
+        }, 1500)
+      } else {
+        // No session ID, just show success anyway (Stripe redirect might not include it)
+        setLoading(false)
+      }
     }
-  }, [searchParams, router, refreshProfile])
+    
+    handlePaymentSuccess()
+  }, [searchParams, refreshProfile])
 
   if (loading) {
     return (
