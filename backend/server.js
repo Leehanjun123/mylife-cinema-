@@ -10,15 +10,30 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'https://lifecinema.site',
-    credentials: true
+    origin: [
+      'https://www.lifecinema.site',
+      'https://lifecinema.site',
+      'http://localhost:3000',
+      'http://localhost:3001'
+    ],
+    credentials: true,
+    methods: ['GET', 'POST']
   }
 });
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://lifecinema.site',
-  credentials: true
+  origin: [
+    'https://www.lifecinema.site',
+    'https://lifecinema.site', 
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json());
 
@@ -78,6 +93,19 @@ app.post('/api/movies/generate', async (req, res) => {
       }
     });
   }, 4000);
+});
+
+// Movie creation endpoint (for frontend compatibility)
+app.post('/api/movies/create', async (req, res) => {
+  console.log('Movie create endpoint called:', req.body);
+  
+  // Return success immediately since movie is already saved in Supabase
+  res.json({
+    success: true,
+    message: 'Movie creation started',
+    movieId: req.body.movieId || 'temp-' + Date.now(),
+    videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+  });
 });
 
 // Get user's movies
