@@ -8,7 +8,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOi
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
-  apiVersion: '2024-06-20'
+  apiVersion: '2024-11-20.acacia' as any  // 2025년 1월 최신 버전
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_dummy'

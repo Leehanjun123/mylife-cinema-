@@ -13,7 +13,7 @@ const FALLBACK_KEY = ['sk', 'test', '51RmannQ6Lbm6gVDgKobNBix2XSkRECF4Bbb0McML8U
 const stripeKey = process.env.STRIPE_SECRET_KEY || FALLBACK_KEY
 
 const stripe = new Stripe(stripeKey, {
-  apiVersion: '2024-06-20'
+  apiVersion: '2024-11-20.acacia' as any  // 2025년 1월 최신 버전
 })
 
 export async function POST(request: NextRequest) {
