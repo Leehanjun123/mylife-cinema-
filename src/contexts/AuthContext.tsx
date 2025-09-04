@@ -82,12 +82,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await db.getUser(userId)
       if (error && error.code === 'PGRST116') {
         // User profile doesn't exist, create one
-        const { data: authUser } = await auth.getCurrentUser()
-        if (authUser.user) {
+        const { user: authUser } = await auth.getCurrentUser()
+        if (authUser) {
           const newProfile = {
             id: userId,
-            username: authUser.user.user_metadata?.username || authUser.user.email?.split('@')[0] || 'User',
-            email: authUser.user.email!,
+            username: authUser.user_metadata?.username || authUser.email?.split('@')[0] || 'User',
+            email: authUser.email!,
             subscription_tier: 'free' as const,
             created_at: new Date().toISOString()
           }
@@ -175,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const canCreateMovie = () => {
     if (!profile || !stats) return false
     
-    if (profile.subscription_tier !== 'free') return true
+    if (profile?.subscription_tier !== 'free') return true
     
     return stats.free_movies_used < 3
   }
@@ -183,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getRemainingFreeMovies = () => {
     if (!profile || !stats) return 0
     
-    if (profile.subscription_tier !== 'free') return Infinity
+    if (profile?.subscription_tier !== 'free') return Infinity
     
     return Math.max(0, 3 - stats.free_movies_used)
   }
