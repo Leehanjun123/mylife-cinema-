@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install": "cd frontend && npm install",
-    "build": "cd frontend && npm run build",
-    "start": "cd frontend && npx next start",
-    "dev": "cd frontend && npm run dev"
+    "install": "cd backend && npm install",
+    "build": "cd backend && npm install",
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install:frontend": "cd frontend && npm install",
+    "build:frontend": "cd frontend && npm run build",
+    "start:frontend": "cd frontend && npx next start"
   },
   "engines": {
     "node": ">=18.0.0",
