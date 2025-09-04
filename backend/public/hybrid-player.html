@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyLife Cinema - Hybrid Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+        }
+
+        .player-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #000 100%);
+        }
+
+        .video-frame {
+            position: relative;
+            width: 90%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        .frame-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .frame-image.active {
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .frame-image.next {
+            opacity: 0;
+            z-index: 1;
+        }
+
+        .subtitle-container {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .subtitle {
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            line-height: 1.6;
+            animation: fadeIn 0.5s ease-in-out;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.9) 100%);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 20;
+        }
+
+        .play-button {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .play-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time-display {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .title-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 30px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            z-index: 10;
+        }
+
+        .movie-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .movie-info {
+            font-size: 1em;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <div class="loading-overlay" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">영화를 불러오는 중...</div>
+        </div>
+
+        <div class="video-frame" id="videoFrame">
+            <img class="frame-image active" id="frame1" alt="Frame 1">
+            <img class="frame-image next" id="frame2" alt="Frame 2">
+            
+            <div class="title-overlay">
+                <h1 class="movie-title" id="movieTitle">Loading...</h1>
+                <div class="movie-info" id="movieInfo"></div>
+            </div>
+
+            <div class="subtitle-container">
+                <div class="subtitle" id="subtitle"></div>
+            </div>
+
+            <div class="controls">
+                <div class="play-button" id="playButton">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+                        <path d="M6 4L16 10L6 16V4Z" />
+                    </svg>
+                </div>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class HybridPlayer {
+            constructor() {
+                this.manifest = null;
+                this.currentFrame = 0;
+                this.isPlaying = false;
+                this.currentTime = 0;
+                this.duration = 0;
+                this.frameTimer = null;
+                this.tts = window.speechSynthesis;
+                
+                this.initElements();
+                this.loadManifest();
+            }
+
+            initElements() {
+                this.elements = {
+                    loading: document.getElementById('loading'),
+                    frame1: document.getElementById('frame1'),
+                    frame2: document.getElementById('frame2'),
+                    subtitle: document.getElementById('subtitle'),
+                    playButton: document.getElementById('playButton'),
+                    progressBar: document.getElementById('progressBar'),
+                    progressFill: document.getElementById('progressFill'),
+                    timeDisplay: document.getElementById('timeDisplay'),
+                    movieTitle: document.getElementById('movieTitle'),
+                    movieInfo: document.getElementById('movieInfo')
+                };
+
+                this.elements.playButton.addEventListener('click', () => this.togglePlay());
+                this.elements.progressBar.addEventListener('click', (e) => this.seek(e));
+            }
+
+            async loadManifest() {
+                try {
+                    // Get manifest from backend or URL params
+                    const params = new URLSearchParams(window.location.search);
+                    const movieId = params.get('movieId') || 'demo';
+                    
+                    // For demo, use mock data
+                    this.manifest = {
+                        title: "나의 하루",
+                        duration: 8,
+                        frames: [
+                            {
+                                dataUri: this.generateGradient(0),
+                                text: "오늘은 특별한 하루였습니다.",
+                                startTime: 0,
+                                endTime: 4
+                            },
+                            {
+                                dataUri: this.generateGradient(1),
+                                text: "새로운 도전과 함께한 시간이었죠.",
+                                startTime: 4,
+                                endTime: 8
+                            }
+                        ]
+                    };
+
+                    this.duration = this.manifest.duration;
+                    this.elements.movieTitle.textContent = this.manifest.title;
+                    this.elements.movieInfo.textContent = `${this.manifest.frames.length} 장면 • ${this.formatTime(this.duration)}`;
+                    
+                    // Preload frames
+                    await this.preloadFrames();
+                    
+                    // Hide loading
+                    this.elements.loading.style.display = 'none';
+                    
+                    // Show first frame
+                    this.showFrame(0);
+                    
+                } catch (error) {
+                    console.error('Failed to load manifest:', error);
+                    this.elements.loading.innerHTML = '<div>영화를 불러올 수 없습니다</div>';
+                }
+            }
+
+            generateGradient(index) {
+                const gradients = [
+                    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+                ];
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = 1920;
+                canvas.height = 1080;
+                const ctx = canvas.getContext('2d');
+                
+                const gradient = ctx.createLinearGradient(0, 0, 1920, 1080);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 1920, 1080);
+                
+                ctx.font = 'bold 72px Arial';
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Scene ${index + 1}`, 960, 540);
+                
+                return canvas.toDataURL('image/jpeg', 0.9);
+            }
+
+            async preloadFrames() {
+                const promises = this.manifest.frames.map(frame => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = frame.dataUri || frame.url;
+                    });
+                });
+                
+                await Promise.all(promises);
+            }
+
+            showFrame(index) {
+                if (index >= this.manifest.frames.length) {
+                    this.stop();
+                    return;
+                }
+
+                const frame = this.manifest.frames[index];
+                const activeEl = this.elements.frame1.classList.contains('active') 
+                    ? this.elements.frame1 
+                    : this.elements.frame2;
+                const nextEl = activeEl === this.elements.frame1 
+                    ? this.elements.frame2 
+                    : this.elements.frame1;
+
+                // Load next frame
+                nextEl.src = frame.dataUri || frame.url;
+                
+                // Transition
+                setTimeout(() => {
+                    activeEl.classList.remove('active');
+                    activeEl.classList.add('next');
+                    nextEl.classList.remove('next');
+                    nextEl.classList.add('active');
+                }, 50);
+
+                // Update subtitle
+                this.elements.subtitle.textContent = frame.text;
+                
+                // TTS
+                if (this.tts && frame.text) {
+                    const utterance = new SpeechSynthesisUtterance(frame.text);
+                    utterance.lang = 'ko-KR';
+                    utterance.rate = 0.9;
+                    this.tts.speak(utterance);
+                }
+
+                this.currentFrame = index;
+            }
+
+            togglePlay() {
+                if (this.isPlaying) {
+                    this.pause();
+                } else {
+                    this.play();
+                }
+            }
+
+            play() {
+                this.isPlaying = true;
+                this.elements.playButton.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+                        <rect x="6" y="4" width="3" height="12"/>
+                        <rect x="11" y="4" width="3" height="12"/>
+                    </svg>
+                `;
+
+                this.startTimer();
+            }
+
+            pause() {
+                this.isPlaying = false;
+                this.elements.playButton.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+                        <path d="M6 4L16 10L6 16V4Z" />
+                    </svg>
+                `;
+
+                this.stopTimer();
+                this.tts.cancel();
+            }
+
+            stop() {
+                this.pause();
+                this.currentTime = 0;
+                this.currentFrame = 0;
+                this.updateProgress();
+                this.showFrame(0);
+            }
+
+            startTimer() {
+                this.frameTimer = setInterval(() => {
+                    this.currentTime += 0.1;
+                    this.updateProgress();
+
+                    // Check if we need to show next frame
+                    const currentFrameData = this.manifest.frames[this.currentFrame];
+                    if (currentFrameData && this.currentTime >= currentFrameData.endTime) {
+                        this.showFrame(this.currentFrame + 1);
+                    }
+
+                    // Check if movie ended
+                    if (this.currentTime >= this.duration) {
+                        this.stop();
+                    }
+                }, 100);
+            }
+
+            stopTimer() {
+                if (this.frameTimer) {
+                    clearInterval(this.frameTimer);
+                    this.frameTimer = null;
+                }
+            }
+
+            updateProgress() {
+                const progress = (this.currentTime / this.duration) * 100;
+                this.elements.progressFill.style.width = `${progress}%`;
+                this.elements.timeDisplay.textContent = 
+                    `${this.formatTime(this.currentTime)} / ${this.formatTime(this.duration)}`;
+            }
+
+            seek(e) {
+                const rect = this.elements.progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                this.currentTime = percent * this.duration;
+                
+                // Find correct frame
+                for (let i = 0; i < this.manifest.frames.length; i++) {
+                    const frame = this.manifest.frames[i];
+                    if (this.currentTime >= frame.startTime && this.currentTime < frame.endTime) {
+                        this.showFrame(i);
+                        break;
+                    }
+                }
+                
+                this.updateProgress();
+            }
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Initialize player when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            new HybridPlayer();
+        });
+    </script>
+</body>
+</html>

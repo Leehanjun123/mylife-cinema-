@@ -5,6 +5,7 @@ import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import MovieGenerator from './services/movieGenerator.js';
 import FastVideoGenerator from './services/fastVideoGenerator.js';
+import HybridGenerator from './services/hybridGenerator.js';
 
 dotenv.config();
 
@@ -41,6 +42,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Serve generated movie files
+app.use('/movies', express.static('/tmp/movies'));
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -111,11 +115,11 @@ app.post('/api/movies/create', async (req, res) => {
   const { diary, emotion, style, music, length, userId, movieId } = req.body;
   
   try {
-    // Use Fast Video Generator for real video
-    const generator = new FastVideoGenerator();
+    // Use Hybrid Generator for better quality
+    const generator = new HybridGenerator();
     
-    // Generate the movie with real video
-    const result = await generator.generateMovieFast(
+    // Generate the movie with hybrid approach
+    const result = await generator.generateMovie(
       diary || 'Today was a wonderful day.',
       emotion || 'happy',
       style || 'realistic',
