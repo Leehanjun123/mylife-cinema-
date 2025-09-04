@@ -82,12 +82,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await db.getUser(userId)
       if (error && error.code === 'PGRST116') {
         // User profile doesn't exist, create one
-        const { data: authUser } = await auth.getCurrentUser()
-        if (authUser.user) {
+        const { user: authUser } = await auth.getCurrentUser()
+        if (authUser) {
           const newProfile = {
             id: userId,
-            username: authUser.user.user_metadata?.username || authUser.user.email?.split('@')[0] || 'User',
-            email: authUser.user.email!,
+            username: authUser.user_metadata?.username || authUser.email?.split('@')[0] || 'User',
+            email: authUser.email!,
             subscription_tier: 'free' as const,
             created_at: new Date().toISOString()
           }

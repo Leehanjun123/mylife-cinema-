@@ -39,3 +39,4 @@ build/
 # Testing
 coverage/
 .nyc_output.env.production
+.vercel

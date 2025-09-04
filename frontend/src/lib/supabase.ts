@@ -1,11 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Use fallback values if environment variables are not set (for build time)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hsvdyccqsrkdswkkvftf.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzdmR5Y2Nxc3JrZHN3a2t2ZnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5NzA5ODIsImV4cCI6MjA3MjU0Njk4Mn0.AbhBx6WW3rYHwAw_ITpsY5DG3cJ1u-_Qg6_th8-psQ8'
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Missing Supabase environment variables, using defaults')
-}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
