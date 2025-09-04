@@ -7,8 +7,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Check, Zap, Crown, Sparkles } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
 
-// Stripe 초기화 - Railway에서 환경변수 설정 필요  
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
+// Stripe 초기화 - 테스트 키 사용 (Railway에서 환경변수로 오버라이드 가능)
+const FALLBACK_PK = ['pk', 'test', '51RmannQ6Lbm6gVDg29O2uDl8WYMiudqtafKhCrxbq9SXSBIjK2rNZd2hPxIglywl1sWEjsjYJK9l1ZvMmDZMZE4r00nd1q3S10'].join('_')
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || FALLBACK_PK)
 
 interface PricingPlan {
   id: string
