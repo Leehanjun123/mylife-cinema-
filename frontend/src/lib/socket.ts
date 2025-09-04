@@ -1,13 +1,13 @@
 'use client'
 
-import { io, Socket } from 'socket.io-client'
+import io from 'socket.io-client'
 import { useAppStore } from './store'
 
 class SocketManager {
-  private socket: Socket | null = null
+  private socket: any = null
   private isConnected = false
 
-  connect(serverUrl: string = 'http://localhost:3000') {
+  connect(serverUrl: string = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3000') {
     if (this.socket) {
       return this.socket
     }

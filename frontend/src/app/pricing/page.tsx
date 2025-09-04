@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
+import { loadStripe } from '@stripe/stripe-js'
+import { BannerAd, InlineAd } from '@/components/AdSense'
 
 const pricingPlans = [
   {
@@ -12,7 +15,7 @@ const pricingPlans = [
     period: '',
     description: '체험용으로 완벽한 플랜',
     features: [
-      '월 1편의 영화 제작',
+      '월 3편의 영화 제작',
       '720p 화질',
       '최대 3분 영상',
       '기본 장르 3가지',
@@ -71,6 +74,84 @@ const pricingPlans = [
   }
 ]
 
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+
+function PricingButton({ plan, isAnnual }: { plan: any, isAnnual: boolean }) {
+  const { user } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      window.location.href = '/auth/signin'
+      return
+    }
+
+    if (plan.name === 'Free') {
+      window.location.href = '/create-movie'
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const stripe = await stripePromise
+      if (!stripe) throw new Error('Stripe를 로드할 수 없습니다.')
+
+      // Stripe Price ID 매핑 (실제 Stripe에서 생성한 ID로 교체)
+      const priceIds = {
+        'Creator': isAnnual ? 'price_creator_annual' : 'price_creator_monthly',
+        'Pro': isAnnual ? 'price_pro_annual' : 'price_pro_monthly'
+      }
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: priceIds[plan.name as keyof typeof priceIds],
+          userId: user.id,
+          userEmail: user.email,
+          successUrl: `${window.location.origin}/dashboard?success=true`,
+          cancelUrl: `${window.location.origin}/pricing`
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('결제 세션 생성에 실패했습니다.')
+      }
+
+      const { sessionId } = await response.json()
+      const { error } = await stripe.redirectToCheckout({ sessionId })
+
+      if (error) {
+        throw new Error(error.message)
+      }
+    } catch (error) {
+      console.error('결제 오류:', error)
+      alert('결제 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <Button 
+      onClick={handleSubscribe}
+      disabled={isLoading}
+      variant={plan.buttonVariant}
+      className={`w-full ${
+        plan.popular 
+          ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+          : plan.buttonVariant === 'outline'
+          ? 'border-purple-200 hover:bg-purple-50'
+          : 'bg-purple-600 hover:bg-purple-700 text-white'
+      }`}
+    >
+      {isLoading ? '처리중...' : plan.buttonText}
+    </Button>
+  )
+}
+
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false)
 
@@ -83,6 +164,7 @@ export default function PricingPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50">
+      <BannerAd />
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -192,23 +274,12 @@ export default function PricingPage() {
                 </div>
 
                 {/* CTA 버튼 */}
-                <Link href={plan.name === 'Free' ? '/create' : '/auth/signup'}>
-                  <Button 
-                    variant={plan.buttonVariant}
-                    className={`w-full ${
-                      plan.popular 
-                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
-                        : plan.buttonVariant === 'outline'
-                        ? 'border-purple-200 hover:bg-purple-50'
-                        : 'bg-purple-600 hover:bg-purple-700 text-white'
-                    }`}
-                  >
-                    {plan.buttonText}
-                  </Button>
-                </Link>
+                <PricingButton plan={plan} isAnnual={isAnnual} />
               </Card>
             ))}
           </div>
+
+          <InlineAd />
 
           {/* FAQ Section */}
           <div className="text-center">
