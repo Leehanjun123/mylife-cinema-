@@ -104,12 +104,26 @@ export default function CreateMoviePage() {
     currentMovie
   } = useAppStore()
 
+  // Initialize socket connection
+  useEffect(() => {
+    if (user) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000'
+      socketManager.connect(apiUrl)
+      socketManager.manualConnect()
+    }
+  }, [user])
+
+  // Update word count
+  useEffect(() => {
+    setWordCount(diaryContent.length)
+  }, [diaryContent])
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!user && !loading) {
       router.push('/auth/signin?redirect=/create-movie')
     }
-  }, [user, router])
+  }, [user, loading, router])
 
   // Show loading if auth is still loading
   if (!user) {
@@ -122,19 +136,6 @@ export default function CreateMoviePage() {
       </div>
     )
   }
-
-  useEffect(() => {
-    // Initialize socket connection
-    if (user) {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000'
-      socketManager.connect(apiUrl)
-      socketManager.manualConnect()
-    }
-  }, [user])
-
-  useEffect(() => {
-    setWordCount(diaryContent.length)
-  }, [diaryContent])
 
   const handleGenerateMovie = async () => {
     // Check if user can create movie
