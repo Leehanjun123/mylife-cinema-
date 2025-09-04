@@ -12,16 +12,27 @@ class SocketManager {
       return this.socket
     }
 
-    // Remove /api from URL if present
-    const socketUrl = serverUrl.replace('/api', '')
+    // Ensure clean URL without /api suffix
+    const socketUrl = serverUrl.replace('/api', '').replace(/\/$/, '')
 
     this.socket = io(socketUrl, {
-      transports: ['polling', 'websocket'], // Start with polling first
+      transports: ['websocket', 'polling'], // Try WebSocket first for Railway
       autoConnect: false,
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      timeout: 10000,
+      reconnectionDelayMax: 5000,
+      maxReconnectionAttempts: 10,
+      timeout: 20000,
+      forceNew: true,
+      // CORS Configuration
+      withCredentials: false,
+      // Railway-specific configurations
+      extraHeaders: {
+        'Access-Control-Allow-Origin': 'https://www.lifecinema.site',
+        'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+      }
     })
 
     // 연결 성공

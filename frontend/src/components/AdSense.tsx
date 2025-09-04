@@ -17,24 +17,53 @@ declare global {
 
 export function AdSense({ adSlot, adFormat = 'auto', style, className }: AdSenseProps) {
   useEffect(() => {
-    try {
-      // Push ad to adsbygoogle array
-      if (typeof window !== 'undefined' && window.adsbygoogle) {
-        window.adsbygoogle.push({})
+    const loadAd = () => {
+      try {
+        // Only load ads in production and if AdSense is available
+        if (process.env.NODE_ENV === 'production' && 
+            typeof window !== 'undefined' && 
+            window.adsbygoogle &&
+            adSlot && 
+            adSlot !== 'placeholder') {
+          
+          // Add delay to ensure DOM is ready
+          setTimeout(() => {
+            try {
+              (window.adsbygoogle = window.adsbygoogle || []).push({})
+            } catch (pushError) {
+              console.warn('AdSense push error:', pushError)
+            }
+          }, 100)
+        }
+      } catch (error) {
+        console.warn('AdSense initialization error:', error)
       }
-    } catch (error) {
-      console.error('AdSense error:', error)
     }
-  }, [])
+
+    loadAd()
+  }, [adSlot])
+
+  // Don't render ads in development
+  if (process.env.NODE_ENV !== 'production' || !adSlot || adSlot === 'placeholder') {
+    return (
+      <div 
+        className={`bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 text-sm ${className || ''}`}
+        style={{ minHeight: '90px', ...style }}
+      >
+        AdSense (개발 모드)
+      </div>
+    )
+  }
 
   return (
     <ins
       className={`adsbygoogle ${className || ''}`}
       style={{ display: 'block', ...style }}
-      data-ad-client={process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID || "ca-pub-1752582087901677"}
+      data-ad-client="ca-pub-1752582087901677"
       data-ad-slot={adSlot}
       data-ad-format={adFormat}
       data-full-width-responsive="true"
+      data-adtest={process.env.NODE_ENV !== 'production' ? 'on' : 'off'}
     />
   )
 }
@@ -42,15 +71,33 @@ export function AdSense({ adSlot, adFormat = 'auto', style, className }: AdSense
 // AdSense script loader component
 export function AdSenseScript() {
   useEffect(() => {
-    if (typeof window !== 'undefined' && !document.querySelector('[data-ad-client]')) {
-      const script = document.createElement('script')
-      script.async = true
-      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID || 'ca-pub-1752582087901677'}`
-      script.crossOrigin = 'anonymous'
-      document.head.appendChild(script)
+    // Only load AdSense in production
+    if (process.env.NODE_ENV !== 'production') {
+      return
+    }
 
-      // Initialize adsbygoogle array
-      window.adsbygoogle = window.adsbygoogle || []
+    if (typeof window !== 'undefined' && !document.querySelector('script[src*="adsbygoogle.js"]')) {
+      try {
+        const script = document.createElement('script')
+        script.async = true
+        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1752582087901677`
+        script.crossOrigin = 'anonymous'
+        
+        // Add error handling for script loading
+        script.onerror = (error) => {
+          console.warn('AdSense script failed to load:', error)
+        }
+        
+        script.onload = () => {
+          console.log('AdSense script loaded successfully')
+          // Initialize adsbygoogle array after script loads
+          window.adsbygoogle = window.adsbygoogle || []
+        }
+        
+        document.head.appendChild(script)
+      } catch (error) {
+        console.warn('Error loading AdSense script:', error)
+      }
     }
   }, [])
 

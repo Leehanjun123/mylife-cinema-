@@ -45,7 +45,18 @@ export const db = {
   getUser: async (userId: string) => {
     const { data, error } = await supabase
       .from('users')
-      .select('*')
+      .select(`
+        id,
+        email,
+        username,
+        avatar_url,
+        subscription_tier,
+        subscription_status,
+        stripe_customer_id,
+        stripe_subscription_id,
+        created_at,
+        updated_at
+      `)
       .eq('id', userId)
       .single()
     return { data, error }
@@ -65,7 +76,24 @@ export const db = {
   getMovies: async (userId: string) => {
     const { data, error } = await supabase
       .from('movies')
-      .select('*')
+      .select(`
+        id,
+        title,
+        content,
+        emotion,
+        genre,
+        style,
+        music,
+        length,
+        status,
+        video_url,
+        thumbnail_url,
+        scenes,
+        is_public,
+        likes,
+        created_at,
+        updated_at
+      `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
     return { data, error }
@@ -104,7 +132,20 @@ export const db = {
     const { data, error } = await supabase
       .from('movies')
       .select(`
-        *,
+        id,
+        title,
+        content,
+        emotion,
+        genre,
+        style,
+        music,
+        status,
+        video_url,
+        thumbnail_url,
+        is_public,
+        likes,
+        created_at,
+        user_id,
         users(username, avatar_url)
       `)
       .eq('is_public', true)
@@ -135,7 +176,15 @@ export const db = {
   getUserStats: async (userId: string) => {
     const { data, error } = await supabase
       .from('user_stats')
-      .select('*')
+      .select(`
+        user_id,
+        total_movies,
+        movies_this_month,
+        storage_used,
+        last_movie_date,
+        created_at,
+        updated_at
+      `)
       .eq('user_id', userId)
       .single()
     return { data, error }
@@ -162,14 +211,14 @@ export const db = {
   getAllMoviesCount: async () => {
     const { count, error } = await supabase
       .from('movies')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
     return { data: count, error }
   },
 
   getAllUsersCount: async () => {
     const { count, error } = await supabase
       .from('users')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
     return { data: count, error }
   },
 
@@ -177,7 +226,7 @@ export const db = {
     const today = new Date().toISOString().split('T')[0]
     const { count, error } = await supabase
       .from('movies')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .gte('created_at', today)
     return { data: count, error }
   }
