@@ -206,16 +206,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = async () => {
     try {
       if (user) {
-        // Add timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Profile refresh timeout')), 5000)
-        )
+        console.log('🔄 프로필 강제 리프레시 시작...')
         
-        await Promise.race([
-          loadUserProfile(user.id),
-          timeoutPromise
-        ])
-        return true
+        // 먼저 Supabase에서 직접 최신 데이터 가져오기
+        const { data: freshData, error: freshError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+        
+        if (freshError) {
+          console.error('❌ 프로필 리프레시 실패:', freshError)
+          return false
+        }
+        
+        if (freshData) {
+          console.log('✅ 프로필 리프레시 성공:', {
+            userId: freshData.id,
+            tier: freshData.subscription_tier,
+            status: freshData.subscription_status
+          })
+          
+          // 상태 직접 업데이트
+          setProfile(freshData)
+          
+          // 통계도 리프레시
+          await loadUserStats(user.id)
+          return true
+        }
+        return false
       }
       return false
     } catch (error) {
@@ -232,19 +251,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const canCreateMovie = () => {
-    if (!profile || !stats) return false
+    if (!profile || !stats) {
+      console.log('⚠️ canCreateMovie: 프로필 또는 통계 데이터 없음')
+      return false
+    }
     
-    if (profile?.subscription_tier !== 'free') return true
+    // 프리미엄 사용자는 무제한
+    if (profile?.subscription_tier === 'creator' || profile?.subscription_tier === 'pro') {
+      console.log('✅ 프리미엄 사용자 - 영화 제작 가능')
+      return true
+    }
     
-    return stats.free_movies_used < 3
+    // 무료 사용자는 3편까지
+    const canCreate = stats.free_movies_used < 3
+    console.log(`🆓 무료 사용자 - 영화 ${stats.free_movies_used}/3 사용, 제작 가능: ${canCreate}`)
+    return canCreate
   }
 
   const getRemainingFreeMovies = () => {
-    if (!profile || !stats) return 0
+    if (!profile || !stats) {
+      console.log('⚠️ getRemainingFreeMovies: 프로필 또는 통계 데이터 없음')
+      return 0
+    }
     
-    if (profile?.subscription_tier !== 'free') return Infinity
+    // 프리미엄 사용자는 무제한
+    if (profile?.subscription_tier === 'creator' || profile?.subscription_tier === 'pro') {
+      console.log('✅ 프리미엄 사용자 - 무제한 영화 제작')
+      return Infinity
+    }
     
-    return Math.max(0, 3 - stats.free_movies_used)
+    const remaining = Math.max(0, 3 - stats.free_movies_used)
+    console.log(`🆓 무료 사용자 - 남은 영화: ${remaining}편`)
+    return remaining
   }
 
   const value = {

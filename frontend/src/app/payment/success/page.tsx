@@ -1,11 +1,55 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { CheckCircle, ArrowRight, Sparkles } from 'lucide-react'
+import { CheckCircle, ArrowRight, Sparkles, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
-// Payment success page - completely independent of auth state
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
+
 export default function PaymentSuccessPage() {
+  const { user, profile, refreshProfile } = useAuth()
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+
+  // 결제 완료 후 프로필 업데이트 시도
+  useEffect(() => {
+    const updateProfile = async () => {
+      if (user && retryCount < 5) {
+        setIsRefreshing(true)
+        try {
+          // Supabase에서 직접 최신 데이터 가져오기
+          const { data, error } = await supabase
+            .from('users')
+            .select('subscription_tier')
+            .eq('id', user.id)
+            .single()
+          
+          if (data && data.subscription_tier !== 'free') {
+            console.log('✅ 구독 업데이트 확인:', data.subscription_tier)
+            await refreshProfile()
+          } else {
+            // 아직 업데이트 안됨 - 3초 후 재시도
+            console.log('⏳ 구독 업데이트 대기 중... 재시도:', retryCount + 1)
+            setTimeout(() => setRetryCount(prev => prev + 1), 3000)
+          }
+        } catch (error) {
+          console.error('프로필 업데이트 오류:', error)
+        } finally {
+          setIsRefreshing(false)
+        }
+      }
+    }
+    
+    updateProfile()
+  }, [user, retryCount])
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true)
+    await refreshProfile()
+    setTimeout(() => setIsRefreshing(false), 1000)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
@@ -47,6 +91,20 @@ export default function PaymentSuccessPage() {
           </div>
 
           <div className="space-y-3">
+            {profile && profile.subscription_tier !== 'free' ? (
+              <div className="mb-4 p-3 bg-green-500/20 rounded-lg">
+                <p className="text-sm text-green-300">
+                  ✅ {profile.subscription_tier === 'creator' ? '크리에이터' : '프로'} 플랜 활성화됨
+                </p>
+              </div>
+            ) : isRefreshing ? (
+              <div className="mb-4 p-3 bg-yellow-500/20 rounded-lg">
+                <p className="text-sm text-yellow-300">
+                  ⏳ 결제 확인 중... (시도 {retryCount}/5)
+                </p>
+              </div>
+            ) : null}
+
             <Link href="/create-movie" className="block">
               <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
                 영화 만들기 시작
@@ -59,6 +117,27 @@ export default function PaymentSuccessPage() {
                 대시보드로 이동
               </Button>
             </Link>
+
+            {profile && profile.subscription_tier === 'free' && (
+              <Button 
+                onClick={handleManualRefresh} 
+                variant="ghost" 
+                className="w-full text-white/70 hover:text-white hover:bg-white/10"
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? (
+                  <>
+                    <RefreshCw className="mr-2 w-4 h-4 animate-spin" />
+                    업데이트 확인 중...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 w-4 h-4" />
+                    수동으로 업데이트 확인
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </Card>
