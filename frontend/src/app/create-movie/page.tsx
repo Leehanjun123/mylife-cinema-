@@ -188,8 +188,11 @@ export default function CreateMoviePage() {
       // Call backend API to start generation
       let data
       try {
-        // 임시로 Frontend API 라우트 사용 (Backend 배포 문제 해결까지)
-        const response = await fetch(`/api/movies/create`, {
+        // Backend URL 설정 (환경변수 또는 기본값)
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || ''
+        const apiEndpoint = backendUrl ? `${backendUrl}/movies/create` : '/api/movies/create'
+        
+        const response = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
