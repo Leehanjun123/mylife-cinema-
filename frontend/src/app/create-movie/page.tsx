@@ -104,14 +104,13 @@ export default function CreateMoviePage() {
     currentMovie
   } = useAppStore()
 
-  // Initialize socket connection (optional - backend may not have Socket.IO)
+  // Initialize socket connection
   useEffect(() => {
-    // Temporarily disable Socket.IO until backend is ready
-    // if (user) {
-    //   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000'
-    //   socketManager.connect(apiUrl)
-    //   socketManager.manualConnect()
-    // }
+    if (user) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000'
+      socketManager.connect(apiUrl)
+      socketManager.manualConnect()
+    }
   }, [user])
 
   // Update word count
