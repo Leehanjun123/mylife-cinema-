@@ -188,17 +188,13 @@ export default function CreateMoviePage() {
       // Call backend API to start generation
       let data
       try {
-        const apiUrl = 'https://mylife-cinema-backend-production.up.railway.app'
-        const response = await fetch(`${apiUrl}/api/movies/create`, {
+        // 임시로 Frontend API 라우트 사용 (Backend 배포 문제 해결까지)
+        const response = await fetch(`/api/movies/create`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Origin': 'https://www.lifecinema.site',
-            'Referer': 'https://www.lifecinema.site'
+            'Accept': 'application/json'
           },
-          mode: 'cors',
-          credentials: 'omit',
           body: JSON.stringify({
             movieId: movie.id,
             diary: diaryContent,
@@ -210,49 +206,16 @@ export default function CreateMoviePage() {
           })
         })
 
-        // Handle Railway redirects properly
-        if (response.status === 308 || response.status === 301 || response.status === 302) {
-          const redirectUrl = response.headers.get('Location')
-          if (redirectUrl) {
-            console.log('Following redirect to:', redirectUrl)
-            const redirectResponse = await fetch(redirectUrl, {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Origin': 'https://www.lifecinema.site'
-              },
-              mode: 'cors',
-              credentials: 'omit',
-              body: JSON.stringify({
-                movieId: movie.id,
-                diary: diaryContent,
-                emotion: selectedEmotion,
-                style: selectedStyle,
-                music: selectedMusic,
-                length: movieLength,
-                userId: user!.id
-              })
-            })
-            
-            if (redirectResponse.ok) {
-              data = await redirectResponse.json()
-            } else {
-              throw new Error(`Redirect failed: ${redirectResponse.status}`)
-            }
-          } else {
-            throw new Error(`Redirect without Location header: ${response.status}`)
-          }
-        } else if (response.ok) {
+        if (response.ok) {
           data = await response.json()
           if (!data.success) {
             throw new Error(data.message || '영화 생성에 실패했습니다.')
           }
         } else {
-          throw new Error(`Backend error: ${response.status} ${response.statusText}`)
+          throw new Error(`API error: ${response.status} ${response.statusText}`)
         }
       } catch (backendError) {
-        console.log('백엔드 연결 실패, 임시 처리 모드로 전환:', backendError)
+        console.log('API 호출 실패:', backendError)
         
         // 백엔드가 연결되지 않은 경우 임시 처리
         setGenerationStatus('📋 현재 백엔드 서버에 연결할 수 없습니다.')
