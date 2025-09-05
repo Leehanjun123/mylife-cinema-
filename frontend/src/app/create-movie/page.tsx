@@ -208,9 +208,9 @@ export default function CreateMoviePage() {
       // Call backend API to start generation
       let data
       try {
-        // Backend URL 설정 (환경변수 또는 기본값)
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || ''
-        const apiEndpoint = backendUrl ? `${backendUrl}/movies/create` : '/api/movies/create'
+        // Always use Railway backend, never use local API route
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mylife-cinema-backend-production.up.railway.app/api'
+        const apiEndpoint = `${backendUrl}/movies/create`
         
         const response = await fetch(apiEndpoint, {
           method: 'POST',
@@ -280,7 +280,7 @@ export default function CreateMoviePage() {
         style: movie.style,
         music: movie.music,
         status: 'completed',
-        videoUrl: data.videoUrl || 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        videoUrl: data.videoUrl || null, // No fallback - show error if no video generated
         thumbnailUrl: data.thumbnailUrl || '/movie-placeholder.jpg',
         scenes: data.scenes || [],
         createdAt: movie.created_at

@@ -156,19 +156,11 @@ app.post('/api/movies/create', async (req, res) => {
 app.get('/api/movies/:userId', async (req, res) => {
   const { userId } = req.params;
   
-  // Mock response
+  // Return empty array - movies should come from Supabase
   res.json({
     success: true,
-    movies: [
-      {
-        id: 'movie_1',
-        title: '샘플 영화',
-        videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        thumbnailUrl: '/movie-placeholder.jpg',
-        duration: 180,
-        createdAt: new Date().toISOString()
-      }
-    ]
+    movies: [],
+    message: 'Movies should be fetched from Supabase database, not backend'
   });
 });
 
@@ -201,19 +193,11 @@ io.on('connection', (socket) => {
       }, (i + 1) * 1500);
     }
     
-    // Send completion
-    setTimeout(() => {
-      socket.emit('generation:complete', {
-        movie: {
-          id: `movie_${Date.now()}`,
-          title: data.title,
-          videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-          thumbnailUrl: '/movie-placeholder.jpg',
-          duration: 180,
-          createdAt: new Date().toISOString()
-        }
-      });
-    }, 7000);
+    // Socket.io should use real AI generation, not mock data
+    // This entire socket handler should call the actual /api/movies/create endpoint
+    socket.emit('generation:error', {
+      error: 'Socket.io movie generation not implemented - use HTTP API instead'
+    });
   });
   
   socket.on('disconnect', () => {
