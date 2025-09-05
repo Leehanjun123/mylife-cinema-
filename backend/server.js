@@ -8,6 +8,7 @@ import FastVideoGenerator from './services/fastVideoGenerator.js';
 import HybridGenerator from './services/hybridGenerator.js';
 import CloudVideoGenerator from './services/cloudVideoGenerator.js';
 import RealVideoGenerator from './services/realVideoGenerator.js';
+import SimpleVideoGenerator from './services/simpleVideoGenerator.js';
 
 dotenv.config();
 
@@ -113,9 +114,9 @@ app.post('/api/movies/create', async (req, res) => {
     let result;
     
     try {
-      // Primary: Real video generation with FFmpeg
-      generator = new RealVideoGenerator();
-      console.log('🎬 Using RealVideoGenerator for actual MP4 creation');
+      // Use SimpleVideoGenerator for Railway (no FFmpeg)
+      generator = new SimpleVideoGenerator();
+      console.log('🎬 Using SimpleVideoGenerator for Railway deployment');
       
       result = await generator.generateRealMovie(
         diary || 'Today was a wonderful day.',
@@ -131,8 +132,8 @@ app.post('/api/movies/create', async (req, res) => {
           console.log('Progress:', progress);
         }
       );
-    } catch (realVideoError) {
-      console.log('⚠️ Real video generation failed:', realVideoError.message);
+    } catch (simpleVideoError) {
+      console.log('⚠️ Simple video generation failed:', simpleVideoError.message);
       
       // Fallback to HybridGenerator
       try {
