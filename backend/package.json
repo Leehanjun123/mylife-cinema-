@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "mylife-cinema-backend",
   "version": "1.0.0",
   "main": "server.js",
@@ -26,3 +27,22 @@
     "node": ">=18.0.0"
   }
 }
+=======
+  "name": "mylife-cinema-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install": "cd backend && npm install",
+    "build": "cd backend && npm install",
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install:frontend": "cd frontend && npm install",
+    "build:frontend": "cd frontend && npm run build",
+    "start:frontend": "cd frontend && npx next start"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+>>>>>>> 7009bf9d820ce18de3a34e00282f00f1f383cd9f

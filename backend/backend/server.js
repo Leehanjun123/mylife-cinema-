@@ -6,8 +6,6 @@ import dotenv from 'dotenv';
 import MovieGenerator from './services/movieGenerator.js';
 import FastVideoGenerator from './services/fastVideoGenerator.js';
 import HybridGenerator from './services/hybridGenerator.js';
-import CloudVideoGenerator from './services/cloudVideoGenerator.js';
-import RealVideoGenerator from './services/realVideoGenerator.js';
 
 dotenv.config();
 
@@ -108,55 +106,24 @@ app.post('/api/movies/create', async (req, res) => {
   const { diary, emotion, style, music, length, userId, movieId } = req.body;
   
   try {
-    // Use RealVideoGenerator for actual video generation
-    let generator;
-    let result;
+    // Use Hybrid Generator for better quality
+    const generator = new HybridGenerator();
     
-    try {
-      // Primary: Real video generation with FFmpeg
-      generator = new RealVideoGenerator();
-      console.log('🎬 Using RealVideoGenerator for actual MP4 creation');
-      
-      result = await generator.generateRealMovie(
-        diary || 'Today was a wonderful day.',
-        emotion || 'happy',
-        style || 'realistic',
-        userId || 'anonymous',
-        (progress) => {
-          // Send progress via Socket.IO if available
-          const socketId = req.headers['x-socket-id'];
-          if (socketId && io.sockets.sockets.get(socketId)) {
-            io.sockets.sockets.get(socketId).emit('generation:progress', progress);
-          }
-          console.log('Progress:', progress);
+    // Generate the movie with hybrid approach (HybridGenerator doesn't use 'length' parameter)
+    const result = await generator.generateMovie(
+      diary || 'Today was a wonderful day.',
+      emotion || 'happy',
+      style || 'realistic',
+      userId || 'anonymous',
+      (progress) => {
+        // Send progress via Socket.IO if available
+        const socketId = req.headers['x-socket-id'];
+        if (socketId && io.sockets.sockets.get(socketId)) {
+          io.sockets.sockets.get(socketId).emit('generation:progress', progress);
         }
-      );
-    } catch (realVideoError) {
-      console.log('⚠️ Real video generation failed:', realVideoError.message);
-      
-      // Fallback to HybridGenerator
-      try {
-        generator = new HybridGenerator();
-        console.log('📹 Falling back to HybridGenerator');
-        
-        result = await generator.generateMovie(
-          diary || 'Today was a wonderful day.',
-          emotion || 'happy',
-          style || 'realistic',
-          userId || 'anonymous',
-          (progress) => {
-            const socketId = req.headers['x-socket-id'];
-            if (socketId && io.sockets.sockets.get(socketId)) {
-              io.sockets.sockets.get(socketId).emit('generation:progress', progress);
-            }
-            console.log('Progress:', progress);
-          }
-        );
-      } catch (hybridError) {
-        console.error('❌ All generators failed:', hybridError);
-        throw new Error('Video generation failed: ' + hybridError.message);
+        console.log('Progress:', progress);
       }
-    }
+    );
     
     // Return the generated movie data
     res.json({

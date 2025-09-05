@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Allow important pages for AdSense crawler
+Allow: /pricing
+Allow: /community
+Allow: /terms
+Allow: /privacy
+
+# Block admin and authentication pages
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /auth/
+Disallow: /_next/
+
+# Sitemap
+Sitemap: https://lifecinema.site/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1

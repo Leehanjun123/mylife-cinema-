@@ -1,4 +1,5 @@
 [phases.setup]
+<<<<<<< HEAD
 nixPkgs = ["nodejs", "ffmpeg"]
 aptPkgs = ["ffmpeg", "imagemagick"]
 
@@ -7,3 +8,15 @@ cmds = ["npm install"]
 
 [start]
 cmd = "npm start"
+=======
+nixPkgs = ["nodejs-18_x", "npm-9_x"]
+
+[phases.install]
+cmds = ["cd frontend && npm ci || npm install"]
+
+[phases.build]  
+cmds = ["cd frontend && npm run build"]
+
+[start]
+cmd = "cd frontend && npx next start"
+>>>>>>> 7009bf9d820ce18de3a34e00282f00f1f383cd9f

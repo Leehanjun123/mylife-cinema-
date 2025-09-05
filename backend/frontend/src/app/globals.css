@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --radius: 0.625rem;
+  --background: 255 255 255;
+  --foreground: 0 0 0;
+  --card: 255 255 255;
+  --card-foreground: 0 0 0;
+  --popover: 255 255 255;
+  --popover-foreground: 0 0 0;
+  --primary: 147 51 234;
+  --primary-foreground: 255 255 255;
+  --secondary: 245 245 245;
+  --secondary-foreground: 0 0 0;
+  --muted: 245 245 245;
+  --muted-foreground: 115 115 115;
+  --accent: 245 245 245;
+  --accent-foreground: 0 0 0;
+  --destructive: 239 68 68;
+  --destructive-foreground: 255 255 255;
+  --border: 229 229 229;
+  --input: 229 229 229;
+  --ring: 147 51 234;
+}
+
+.dark {
+  --background: 0 0 0;
+  --foreground: 255 255 255;
+  --card: 0 0 0;
+  --card-foreground: 255 255 255;
+  --popover: 0 0 0;
+  --popover-foreground: 255 255 255;
+  --primary: 147 51 234;
+  --primary-foreground: 255 255 255;
+  --secondary: 39 39 42;
+  --secondary-foreground: 255 255 255;
+  --muted: 39 39 42;
+  --muted-foreground: 161 161 170;
+  --accent: 39 39 42;
+  --accent-foreground: 255 255 255;
+  --destructive: 127 29 29;
+  --destructive-foreground: 255 255 255;
+  --border: 39 39 42;
+  --input: 39 39 42;
+  --ring: 147 51 234;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground;
+}
+
+/* Custom animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground rounded-md;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-foreground;
+}
