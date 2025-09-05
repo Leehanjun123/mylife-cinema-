@@ -3,11 +3,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import WorkingVideoGenerator from './services/workingVideoGenerator.js';
-// Old generators - kept for reference but not used
-// import MovieGenerator from './services/movieGenerator.js';
-// import FastVideoGenerator from './services/fastVideoGenerator.js';
-// import HybridGenerator from './services/hybridGenerator.js';
+import HybridGenerator from './services/hybridGenerator.js';
 // import CloudVideoGenerator from './services/cloudVideoGenerator.js';
 // import RealVideoGenerator from './services/realVideoGenerator.js';
 // import SimpleVideoGenerator from './services/simpleVideoGenerator.js';
@@ -120,11 +116,11 @@ app.post('/api/movies/create', async (req, res) => {
     let result;
     
     try {
-      // Use WorkingVideoGenerator - 100% 작동 보장!
-      generator = new WorkingVideoGenerator();
-      console.log('🎬 Using WorkingVideoGenerator - 100% 작동!');
+      // Use HybridGenerator - Fixed to return real video
+      generator = new HybridGenerator();
+      console.log('🎬 Using HybridGenerator - Real MP4 Video!');
       
-      result = await generator.generateRealMovie(
+      result = await generator.generateMovie(
         diary || 'Today was a wonderful day.',
         emotion || 'happy',
         style || 'realistic',
@@ -139,7 +135,7 @@ app.post('/api/movies/create', async (req, res) => {
         }
       );
     } catch (error) {
-      console.error('❌ WorkingVideoGenerator failed:', error);
+      console.error('❌ HybridGenerator failed:', error);
       throw new Error('Video generation failed: ' + error.message);
     }
     
@@ -160,7 +156,7 @@ app.post('/api/movies/create', async (req, res) => {
       success: false,
       error: error.message || 'AI generation failed',
       details: {
-        generator: 'WorkingVideoGenerator',
+        generator: 'HybridGenerator',
         apiKeyExists: !!process.env.OPENAI_API_KEY,
         apiKeyPrefix: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'NO_KEY',
         errorType: error.constructor.name
