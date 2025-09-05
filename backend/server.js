@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import MovieGenerator from './services/movieGenerator.js';
 import FastVideoGenerator from './services/fastVideoGenerator.js';
 import HybridGenerator from './services/hybridGenerator.js';
+import CloudVideoGenerator from './services/cloudVideoGenerator.js';
 
 dotenv.config();
 
@@ -106,11 +107,16 @@ app.post('/api/movies/create', async (req, res) => {
   const { diary, emotion, style, music, length, userId, movieId } = req.body;
   
   try {
-    // Use Hybrid Generator for better quality
-    const generator = new HybridGenerator();
+    // Try CloudVideoGenerator first for REAL videos
+    let generator;
+    let result;
     
-    // Generate the movie with hybrid approach (HybridGenerator doesn't use 'length' parameter)
-    const result = await generator.generateMovie(
+    try {
+      // Attempt cloud video generation
+      generator = new CloudVideoGenerator();
+      console.log('🎬 Using CloudVideoGenerator for REAL MP4 video');
+      
+      result = await generator.generateRealMovie(
       diary || 'Today was a wonderful day.',
       emotion || 'happy',
       style || 'realistic',
@@ -124,6 +130,25 @@ app.post('/api/movies/create', async (req, res) => {
         console.log('Progress:', progress);
       }
     );
+    } catch (cloudError) {
+      // Fallback to HybridGenerator if cloud fails
+      console.log('⚠️ Cloud video failed, falling back to HybridGenerator:', cloudError.message);
+      generator = new HybridGenerator();
+      
+      result = await generator.generateMovie(
+        diary || 'Today was a wonderful day.',
+        emotion || 'happy',
+        style || 'realistic',
+        userId || 'anonymous',
+        (progress) => {
+          const socketId = req.headers['x-socket-id'];
+          if (socketId && io.sockets.sockets.get(socketId)) {
+            io.sockets.sockets.get(socketId).emit('generation:progress', progress);
+          }
+          console.log('Progress:', progress);
+        }
+      );
+    }
     
     // Return the generated movie data
     res.json({
