@@ -192,12 +192,8 @@ JSON 형식 (2장면만):
 
       } catch (error) {
         console.error('FFmpeg error:', error);
-        // Fallback
-        resolve({
-          videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-          duration: 60,
-          size: 0
-        });
+        // Don't hide errors - let them bubble up
+        reject(new Error(`FFmpeg video generation failed: ${error.message}`));
       }
     });
   }

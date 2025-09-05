@@ -229,14 +229,14 @@ export default function CreateMoviePage() {
           })
         })
 
-        if (response.ok) {
-          data = await response.json()
-          if (!data.success) {
-            throw new Error(data.message || '영화 생성에 실패했습니다.')
-          }
-        } else {
-          throw new Error(`API error: ${response.status} ${response.statusText}`)
+        const responseData = await response.json()
+        
+        if (!response.ok || !responseData.success) {
+          console.error('🔴 백엔드 에러:', responseData)
+          throw new Error(responseData.error || responseData.message || '영화 생성에 실패했습니다.')
         }
+        
+        data = responseData
       } catch (backendError) {
         console.log('API 호출 실패:', backendError)
         

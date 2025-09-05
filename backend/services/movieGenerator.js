@@ -230,7 +230,7 @@ JSON 형식으로 응답하세요:
       // 5. Return the video URL
 
       return {
-        videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        videoUrl: null, // FFmpeg failed - no fallback video
         duration: 60,
         size: '1920x1080'
       };

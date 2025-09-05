@@ -92,21 +92,12 @@ app.post('/api/movies/generate', async (req, res) => {
     setTimeout(() => socket.emit('generation:progress', { progress: 90, stage: '영상 편집 중...' }), 3000);
   }
   
-  // Return mock movie data
-  setTimeout(() => {
-    res.json({
-      success: true,
-      movie: {
-        id: movieId,
-        title,
-        videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        thumbnailUrl: '/movie-placeholder.jpg',
-        duration: 180,
-        style,
-        createdAt: new Date().toISOString()
-      }
-    });
-  }, 4000);
+  // Deprecated endpoint - redirect to real API
+  res.status(400).json({
+    success: false,
+    error: 'This endpoint is deprecated. Use POST /api/movies/create instead',
+    redirectTo: '/api/movies/create'
+  });
 });
 
 // Movie creation endpoint (with real AI generation)
@@ -144,17 +135,20 @@ app.post('/api/movies/create', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Movie creation error:', error);
+    console.error('🔴 Movie creation error:', error.message);
+    console.error('Full error:', error);
     
-    // Fallback to sample video on error
-    res.json({
-      success: true,
-      message: 'Movie creation started (demo mode)',
-      movieId: movieId || 'temp-' + Date.now(),
-      videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      title: 'Demo Movie',
-      genre: emotion || 'drama',
-      scenes: []
+    // 실제 에러를 반환하여 문제를 확인
+    res.status(500).json({
+      success: false,
+      error: error.message || 'AI generation failed',
+      details: {
+        generator: 'HybridGenerator',
+        apiKeyExists: !!process.env.OPENAI_API_KEY,
+        apiKeyPrefix: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'NO_KEY',
+        errorType: error.constructor.name
+      },
+      movieId: movieId || 'failed-' + Date.now()
     });
   }
 });
