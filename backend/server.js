@@ -10,6 +10,7 @@ import CloudVideoGenerator from './services/cloudVideoGenerator.js';
 import RealVideoGenerator from './services/realVideoGenerator.js';
 import SimpleVideoGenerator from './services/simpleVideoGenerator.js';
 import FreeVideoGenerator from './services/freeVideoGenerator.js';
+import CreatomateVideoGenerator from './services/creatomateVideoGenerator.js';
 
 dotenv.config();
 
@@ -115,9 +116,9 @@ app.post('/api/movies/create', async (req, res) => {
     let result;
     
     try {
-      // Use FreeVideoGenerator with FFmpeg.wasm (무료!)
-      generator = new FreeVideoGenerator();
-      console.log('🎬 Using FreeVideoGenerator with FFmpeg.wasm (완전 무료!)');
+      // Use CreatomateVideoGenerator - Railway에서 100% 작동!
+      generator = new CreatomateVideoGenerator();
+      console.log('🎬 Using CreatomateVideoGenerator - 실제 MP4 비디오!');
       
       result = await generator.generateRealMovie(
         diary || 'Today was a wonderful day.',
