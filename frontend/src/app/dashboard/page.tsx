@@ -253,9 +253,21 @@ export default function DashboardPage() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {userMovies.map((movie, index) => (
                   <Card key={movie.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    {/* 썸네일 */}
+                    {/* 썸네일 또는 비디오 */}
                     <div className="aspect-video bg-gray-200 relative overflow-hidden group">
-                      {movie.thumbnail_url ? (
+                      {(movie.video_url || movie.videoUrl) ? (
+                        <video 
+                          src={movie.video_url || movie.videoUrl}
+                          className="w-full h-full object-cover"
+                          muted
+                          playsInline
+                          onMouseEnter={(e) => e.currentTarget.play()}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.pause()
+                            e.currentTarget.currentTime = 0
+                          }}
+                        />
+                      ) : movie.thumbnail_url ? (
                         <img 
                           src={movie.thumbnail_url} 
                           alt={movie.title}
@@ -314,7 +326,19 @@ export default function DashboardPage() {
                       <div className="flex gap-2">
                         {movie.status === 'completed' && (
                           <>
-                            <Button size="sm" className="flex-1">
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => {
+                                // 비디오 URL이 있으면 직접 재생
+                                if (movie.video_url || movie.videoUrl) {
+                                  window.open(movie.video_url || movie.videoUrl, '_blank')
+                                } else {
+                                  // 없으면 create 페이지로 이동
+                                  router.push('/create')
+                                }
+                              }}
+                            >
                               <Play className="w-3 h-3 mr-1" />
                               재생
                             </Button>

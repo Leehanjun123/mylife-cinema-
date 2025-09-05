@@ -35,6 +35,7 @@ export default function CreatePage() {
     setGenerationStatus,
     setError,
     addMovie,
+    setCurrentMovie,
     currentMovie
   } = useAppStore()
 
@@ -75,16 +76,23 @@ export default function CreatePage() {
       if (response.success) {
         setCurrentMovieId(response.movieId)
         
-        // 새로운 영화를 스토어에 추가
-        addMovie({
+        // 새로운 영화 객체 생성
+        const newMovie = {
           id: response.movieId,
-          title: `${new Date().toLocaleDateString()} 일기`,
+          title: response.title || `${new Date().toLocaleDateString()} 일기`,
           content: diaryContent,
           emotion: selectedEmotion,
-          genre: 'auto', // AI가 선택
-          status: 'processing',
-          createdAt: new Date().toISOString()
-        })
+          genre: 'auto',
+          status: 'completed',
+          createdAt: new Date().toISOString(),
+          videoUrl: response.videoUrl,
+          duration: response.duration || 30,
+          format: response.format || 'mp4'
+        }
+        
+        // 스토어에 추가하고 현재 영화로 설정
+        addMovie(newMovie)
+        setCurrentMovie(newMovie)
         
         // WebSocket으로 영화 생성 시작 알림
         socketManager.startMovieGeneration(response.movieId)
