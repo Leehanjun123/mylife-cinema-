@@ -3,7 +3,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import BulletproofVideoGenerator from './services/bulletproofVideoGenerator.js';
+import ActualVideoGenerator from './services/actualVideoGenerator.js';
 // Old generators - kept for reference but not used
 // import MovieGenerator from './services/movieGenerator.js';
 // import FastVideoGenerator from './services/fastVideoGenerator.js';
@@ -120,9 +120,9 @@ app.post('/api/movies/create', async (req, res) => {
     let result;
     
     try {
-      // Use BulletproofVideoGenerator - Railway에서 100% 작동!
-      generator = new BulletproofVideoGenerator();
-      console.log('🎬 Using BulletproofVideoGenerator - Railway에서 완벽 작동!');
+      // Use ActualVideoGenerator - 가장 단순하고 확실한 방법!
+      generator = new ActualVideoGenerator();
+      console.log('🎬 Using ActualVideoGenerator - 실제 비디오 URL!');
       
       result = await generator.generateRealMovie(
         diary || 'Today was a wonderful day.',
@@ -139,7 +139,7 @@ app.post('/api/movies/create', async (req, res) => {
         }
       );
     } catch (error) {
-      console.error('❌ BulletproofVideoGenerator failed:', error);
+      console.error('❌ ActualVideoGenerator failed:', error);
       throw new Error('Video generation failed: ' + error.message);
     }
     
@@ -160,7 +160,7 @@ app.post('/api/movies/create', async (req, res) => {
       success: false,
       error: error.message || 'AI generation failed',
       details: {
-        generator: 'BulletproofVideoGenerator',
+        generator: 'ActualVideoGenerator',
         apiKeyExists: !!process.env.OPENAI_API_KEY,
         apiKeyPrefix: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'NO_KEY',
         errorType: error.constructor.name
