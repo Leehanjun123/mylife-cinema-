@@ -109,12 +109,11 @@ app.post('/api/movies/create', async (req, res) => {
     // Use Hybrid Generator for better quality
     const generator = new HybridGenerator();
     
-    // Generate the movie with hybrid approach
+    // Generate the movie with hybrid approach (HybridGenerator doesn't use 'length' parameter)
     const result = await generator.generateMovie(
       diary || 'Today was a wonderful day.',
       emotion || 'happy',
       style || 'realistic',
-      length || 'short',
       userId || 'anonymous',
       (progress) => {
         // Send progress via Socket.IO if available
