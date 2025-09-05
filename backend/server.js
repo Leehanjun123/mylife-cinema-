@@ -3,16 +3,18 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import MovieGenerator from './services/movieGenerator.js';
-import FastVideoGenerator from './services/fastVideoGenerator.js';
-import HybridGenerator from './services/hybridGenerator.js';
-import CloudVideoGenerator from './services/cloudVideoGenerator.js';
-import RealVideoGenerator from './services/realVideoGenerator.js';
-import SimpleVideoGenerator from './services/simpleVideoGenerator.js';
-import FreeVideoGenerator from './services/freeVideoGenerator.js';
-import CreatomateVideoGenerator from './services/creatomateVideoGenerator.js';
-import CanvasVideoGenerator from './services/canvasVideoGenerator.js';
-import MP4VideoGenerator from './services/mp4VideoGenerator.js';
+import BestVideoGenerator from './services/bestVideoGenerator.js';
+// Old generators - kept for reference but not used
+// import MovieGenerator from './services/movieGenerator.js';
+// import FastVideoGenerator from './services/fastVideoGenerator.js';
+// import HybridGenerator from './services/hybridGenerator.js';
+// import CloudVideoGenerator from './services/cloudVideoGenerator.js';
+// import RealVideoGenerator from './services/realVideoGenerator.js';
+// import SimpleVideoGenerator from './services/simpleVideoGenerator.js';
+// import FreeVideoGenerator from './services/freeVideoGenerator.js';
+// import CreatomateVideoGenerator from './services/creatomateVideoGenerator.js';
+// import CanvasVideoGenerator from './services/canvasVideoGenerator.js';
+// import MP4VideoGenerator from './services/mp4VideoGenerator.js';
 
 dotenv.config();
 
@@ -118,9 +120,9 @@ app.post('/api/movies/create', async (req, res) => {
     let result;
     
     try {
-      // Use CanvasVideoGenerator - 순수 오픈소스!
-      generator = new CanvasVideoGenerator();
-      console.log('🎬 Using CanvasVideoGenerator - 오픈소스 GIF/WebM 생성!');
+      // Use BestVideoGenerator - 가장 안정적이고 좋은 구현!
+      generator = new BestVideoGenerator();
+      console.log('🎬 Using BestVideoGenerator - 최고의 비디오 생성기!');
       
       result = await generator.generateRealMovie(
         diary || 'Today was a wonderful day.',
@@ -136,31 +138,9 @@ app.post('/api/movies/create', async (req, res) => {
           console.log('Progress:', progress);
         }
       );
-    } catch (simpleVideoError) {
-      console.log('⚠️ Simple video generation failed:', simpleVideoError.message);
-      
-      // Fallback to HybridGenerator
-      try {
-        generator = new HybridGenerator();
-        console.log('📹 Falling back to HybridGenerator');
-        
-        result = await generator.generateMovie(
-          diary || 'Today was a wonderful day.',
-          emotion || 'happy',
-          style || 'realistic',
-          userId || 'anonymous',
-          (progress) => {
-            const socketId = req.headers['x-socket-id'];
-            if (socketId && io.sockets.sockets.get(socketId)) {
-              io.sockets.sockets.get(socketId).emit('generation:progress', progress);
-            }
-            console.log('Progress:', progress);
-          }
-        );
-      } catch (hybridError) {
-        console.error('❌ All generators failed:', hybridError);
-        throw new Error('Video generation failed: ' + hybridError.message);
-      }
+    } catch (error) {
+      console.error('❌ BestVideoGenerator failed:', error);
+      throw new Error('Video generation failed: ' + error.message);
     }
     
     // Return the generated movie data
@@ -180,7 +160,7 @@ app.post('/api/movies/create', async (req, res) => {
       success: false,
       error: error.message || 'AI generation failed',
       details: {
-        generator: 'HybridGenerator',
+        generator: 'BestVideoGenerator',
         apiKeyExists: !!process.env.OPENAI_API_KEY,
         apiKeyPrefix: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'NO_KEY',
         errorType: error.constructor.name
