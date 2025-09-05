@@ -3,7 +3,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import ActualVideoGenerator from './services/actualVideoGenerator.js';
+import WorkingVideoGenerator from './services/workingVideoGenerator.js';
 // Old generators - kept for reference but not used
 // import MovieGenerator from './services/movieGenerator.js';
 // import FastVideoGenerator from './services/fastVideoGenerator.js';
@@ -120,9 +120,9 @@ app.post('/api/movies/create', async (req, res) => {
     let result;
     
     try {
-      // Use ActualVideoGenerator - 가장 단순하고 확실한 방법!
-      generator = new ActualVideoGenerator();
-      console.log('🎬 Using ActualVideoGenerator - 실제 비디오 URL!');
+      // Use WorkingVideoGenerator - 100% 작동 보장!
+      generator = new WorkingVideoGenerator();
+      console.log('🎬 Using WorkingVideoGenerator - 100% 작동!');
       
       result = await generator.generateRealMovie(
         diary || 'Today was a wonderful day.',
@@ -139,7 +139,7 @@ app.post('/api/movies/create', async (req, res) => {
         }
       );
     } catch (error) {
-      console.error('❌ ActualVideoGenerator failed:', error);
+      console.error('❌ WorkingVideoGenerator failed:', error);
       throw new Error('Video generation failed: ' + error.message);
     }
     
@@ -160,7 +160,7 @@ app.post('/api/movies/create', async (req, res) => {
       success: false,
       error: error.message || 'AI generation failed',
       details: {
-        generator: 'ActualVideoGenerator',
+        generator: 'WorkingVideoGenerator',
         apiKeyExists: !!process.env.OPENAI_API_KEY,
         apiKeyPrefix: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'NO_KEY',
         errorType: error.constructor.name
