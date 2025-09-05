@@ -9,6 +9,7 @@ import HybridGenerator from './services/hybridGenerator.js';
 import CloudVideoGenerator from './services/cloudVideoGenerator.js';
 import RealVideoGenerator from './services/realVideoGenerator.js';
 import SimpleVideoGenerator from './services/simpleVideoGenerator.js';
+import FreeVideoGenerator from './services/freeVideoGenerator.js';
 
 dotenv.config();
 
@@ -114,9 +115,9 @@ app.post('/api/movies/create', async (req, res) => {
     let result;
     
     try {
-      // Use SimpleVideoGenerator for Railway (no FFmpeg)
-      generator = new SimpleVideoGenerator();
-      console.log('🎬 Using SimpleVideoGenerator for Railway deployment');
+      // Use FreeVideoGenerator with FFmpeg.wasm (무료!)
+      generator = new FreeVideoGenerator();
+      console.log('🎬 Using FreeVideoGenerator with FFmpeg.wasm (완전 무료!)');
       
       result = await generator.generateRealMovie(
         diary || 'Today was a wonderful day.',
