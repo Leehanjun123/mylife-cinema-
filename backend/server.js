@@ -11,6 +11,8 @@ import RealVideoGenerator from './services/realVideoGenerator.js';
 import SimpleVideoGenerator from './services/simpleVideoGenerator.js';
 import FreeVideoGenerator from './services/freeVideoGenerator.js';
 import CreatomateVideoGenerator from './services/creatomateVideoGenerator.js';
+import CanvasVideoGenerator from './services/canvasVideoGenerator.js';
+import MP4VideoGenerator from './services/mp4VideoGenerator.js';
 
 dotenv.config();
 
@@ -116,9 +118,9 @@ app.post('/api/movies/create', async (req, res) => {
     let result;
     
     try {
-      // Use CreatomateVideoGenerator - Railway에서 100% 작동!
-      generator = new CreatomateVideoGenerator();
-      console.log('🎬 Using CreatomateVideoGenerator - 실제 MP4 비디오!');
+      // Use CanvasVideoGenerator - 순수 오픈소스!
+      generator = new CanvasVideoGenerator();
+      console.log('🎬 Using CanvasVideoGenerator - 오픈소스 GIF/WebM 생성!');
       
       result = await generator.generateRealMovie(
         diary || 'Today was a wonderful day.',
